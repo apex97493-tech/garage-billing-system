@@ -1,0 +1,23 @@
+{
+  "name": "iron-throttle-bike-modifier-studio",
+  "version": "1.0.0",
+  "description": "Standalone Offline Software for Bike Modifiers & Custom Motorcycle Workshops",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "portable:launch": "node backend/server.js"
+  },
+  "keywords": [
+    "bike-modifier",
+    "custom-motorcycle",
+    "garage-billing",
+    "workshop-software",
+    "offline-pos"
+  ],
+  "author": "Iron & Throttle",
+  "license": "ISC"
+}

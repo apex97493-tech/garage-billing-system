@@ -1,0 +1,282 @@
+{
+  "customers": [
+    {
+      "id": "cust_1788261233873_2nqf",
+      "name": "Bullet Bhaiya",
+      "phone": "8502883088",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ90AB5678",
+      "vinNo": "",
+      "visitCount": 1,
+      "totalSpent": 22724,
+      "lastKm": 3000,
+      "lastVisited": "2026-09-01T11:13:53.873Z",
+      "createdAt": "2026-09-01T11:13:53.873Z",
+      "updatedAt": "2026-09-01T11:13:53.873Z"
+    },
+    {
+      "id": "cust_1788258984639_2oqi",
+      "name": "dhananjay rajput",
+      "phone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "visitCount": 4,
+      "totalSpent": 38635,
+      "lastKm": 1223,
+      "lastVisited": "2026-09-01T11:08:44.073Z",
+      "createdAt": "2026-09-01T10:36:24.639Z",
+      "updatedAt": "2026-09-01T11:08:44.073Z"
+    },
+    {
+      "id": "cust_1788021926791_t612",
+      "name": "Aryan Sharma",
+      "phone": "9876543210",
+      "bikeModel": "Royal Enfield Hunter 350",
+      "regNo": "MH-02-EE-9999",
+      "createdAt": "2026-08-29T16:45:26.791Z",
+      "updatedAt": "2026-08-29T17:06:15.736Z",
+      "vinNo": "",
+      "visitCount": 2,
+      "totalSpent": 5664,
+      "lastKm": 5400,
+      "lastVisited": "2026-08-29T17:06:15.736Z"
+    }
+  ],
+  "parts": [
+    {
+      "id": "p_1",
+      "name": "Custom Scrambler Free-Flow Exhaust (Stainless Steel)",
+      "category": "Exhaust",
+      "basePrice": 4800,
+      "gstRate": 18,
+      "stock": 6
+    },
+    {
+      "id": "p_2",
+      "name": "Megaphone Cafe Racer Silencer (Matte Black)",
+      "category": "Exhaust",
+      "basePrice": 3500,
+      "gstRate": 18,
+      "stock": 7
+    },
+    {
+      "id": "p_3",
+      "name": "High-Flow Performance Air Filter (BMC/K&N Type)",
+      "category": "Performance",
+      "basePrice": 2200,
+      "gstRate": 18,
+      "stock": 18
+    },
+    {
+      "id": "p_4",
+      "name": "ECU Stage 1 Remap & Dyno Tune",
+      "category": "Performance",
+      "basePrice": 6500,
+      "gstRate": 18,
+      "stock": 999,
+      "isLabour": true
+    },
+    {
+      "id": "p_5",
+      "name": "7-inch LED Projector Headlight with DRL Ring",
+      "category": "Lighting",
+      "basePrice": 2800,
+      "gstRate": 18,
+      "stock": 18
+    },
+    {
+      "id": "p_20",
+      "name": "Motul 7100 10W50 Fully Synthetic Oil (per Litre)",
+      "category": "Maintenance",
+      "basePrice": 1100,
+      "gstRate": 18,
+      "stock": 45
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv_1788261233876",
+      "_id": "inv_1788261233876",
+      "invoiceNo": "MOD-1004",
+      "customerId": "cust_1788261233873_2nqf",
+      "customerName": "Bullet Bhaiya",
+      "customerPhone": "8502883088",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ90AB5678",
+      "vinNo": "",
+      "buildType": "General Periodic Service & Tuning",
+      "currentKm": 3000,
+      "nextServiceKm": 7000,
+      "nextServiceDate": "2026-09-01T11:13:53.862Z",
+      "items": [
+        {
+          "partId": "p_1",
+          "partName": "Custom Scrambler Free-Flow Exhaust (Stainless Steel)",
+          "qty": 1,
+          "unitPrice": 4800,
+          "gstRate": 18,
+          "isLabour": false
+        },
+        {
+          "partId": "p_2",
+          "partName": "Megaphone Cafe Racer Silencer (Matte Black)",
+          "qty": 3,
+          "unitPrice": 3500,
+          "gstRate": 18,
+          "isLabour": false
+        },
+        {
+          "partId": "p_4",
+          "partName": "ECU Stage 1 Remap & Dyno Tune",
+          "qty": 1,
+          "unitPrice": 6500,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 21800,
+      "totalGst": 3924,
+      "discount": 3000,
+      "grandTotal": 22724,
+      "advancePaid": 0,
+      "balanceDue": 22724,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": true,
+      "createdAt": "2026-09-01T11:13:53.876Z",
+      "reminderSentAt": "2026-09-01T11:14:08.134Z"
+    },
+    {
+      "id": "inv_1788260924074",
+      "_id": "inv_1788260924074",
+      "invoiceNo": "MOD-1003",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "buildType": "General Periodic Service & Tuning",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2026-09-01T11:08:44.036Z",
+      "items": [
+        {
+          "partId": "p_1",
+          "partName": "Custom Scrambler Free-Flow Exhaust (Stainless Steel)",
+          "qty": 1,
+          "unitPrice": 4800,
+          "gstRate": 18,
+          "isLabour": false
+        },
+        {
+          "partId": "p_2",
+          "partName": "Megaphone Cafe Racer Silencer (Matte Black)",
+          "qty": 1,
+          "unitPrice": 3500,
+          "gstRate": 18,
+          "isLabour": false
+        }
+      ],
+      "subtotal": 8300,
+      "totalGst": 1494,
+      "discount": 0,
+      "grandTotal": 9794,
+      "advancePaid": 0,
+      "balanceDue": 9794,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": true,
+      "createdAt": "2026-09-01T11:08:44.074Z",
+      "reminderSentAt": "2026-09-01T11:09:33.947Z"
+    },
+    {
+      "id": "inv_1788260000374",
+      "_id": "inv_1788260000374",
+      "invoiceNo": "MOD-1004",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "buildType": "General Periodic Service & Tuning",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2026-09-01T10:53:20.362Z",
+      "items": [
+        {
+          "partId": "p_20",
+          "partName": "Motul 7100 10W50 Fully Synthetic Oil (per Litre)",
+          "qty": 2,
+          "unitPrice": 1100,
+          "gstRate": 18,
+          "isLabour": false
+        }
+      ],
+      "subtotal": 2200,
+      "totalGst": 396,
+      "discount": 0,
+      "grandTotal": 2596,
+      "advancePaid": 0,
+      "balanceDue": 2596,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": true,
+      "createdAt": "2026-09-01T10:53:20.374Z",
+      "reminderSentAt": "2026-09-01T11:09:20.596Z"
+    },
+    {
+      "id": "inv_1788021926793",
+      "_id": "inv_1788021926793",
+      "invoiceNo": "MOD-1001",
+      "customerId": "cust_1788021926791_t612",
+      "customerName": "Aryan Sharma",
+      "customerPhone": "9876543210",
+      "bikeModel": "Royal Enfield Hunter 350",
+      "regNo": "MH-02-EE-9999",
+      "vinNo": "",
+      "buildType": "Periodic Maintenance",
+      "currentKm": 5400,
+      "nextServiceKm": 9400,
+      "nextServiceDate": "2026-08-30T16:45:26.793Z",
+      "items": [
+        {
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 1,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 1200,
+      "totalGst": 216,
+      "discount": 0,
+      "grandTotal": 1416,
+      "advancePaid": 1416,
+      "balanceDue": 0,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-08-29T16:45:26.793Z"
+    }
+  ],
+  "jobCards": [],
+  "settings": {
+    "shopName": "IRON & THROTTLE CUSTOM MOTORCYCLES",
+    "tagline": "Bespoke Bike Modifications, Fabrication & Performance Workshop",
+    "workshopType": "multi_brand_service",
+    "contactNumber": "+91 98765 43210",
+    "address": "Plot 42, Custom Street, Industrial Area Phase 2, Near Speed Track",
+    "gstin": "07AAAAA0000A1Z5",
+    "upiId": "ironthrottle@upi",
+    "currency": "₹",
+    "taxLabel": "GST",
+    "autoSendBillWhatsapp": true,
+    "autoSendServiceReminders": true,
+    "reminderDaysBefore": 3,
+    "terms": "1. 50% advance required on custom build orders.\n2. All custom fabricated metalwork carries a 1-year structural guarantee.\n3. Goods once tailored/modified cannot be returned.\n4. Paint and powder coating warranty: 6 months against peeling.",
+    "bankDetails": "Bank: HDFC Bank | A/C: 50200012345678 | IFSC: HDFC0001234"
+  }
+}

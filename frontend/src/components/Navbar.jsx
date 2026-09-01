@@ -1,41 +1,105 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Wrench, Package, Settings, Monitor } from 'lucide-react';
+import axios from 'axios';
+import { 
+  Wrench, Package, Settings, Calculator, 
+  ClipboardList, HardDrive, Users, FileText, BellRing 
+} from 'lucide-react';
+
+const API_URL = 'http://localhost:5000/api';
 
 export default function Navbar() {
   const location = useLocation();
+  const [dueCount, setDueCount] = useState(0);
+
+  useEffect(() => {
+    fetchDueCount();
+    const interval = setInterval(fetchDueCount, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchDueCount = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/reminders/due`);
+      setDueCount((res.data || []).length);
+    } catch (err) {
+      // Backend starting
+    }
+  };
 
   const navItems = [
-    { name: 'POS / Billing', path: '/', icon: <Monitor className="w-5 h-5 mr-2" /> },
-    { name: 'Inventory', path: '/inventory', icon: <Package className="w-5 h-5 mr-2" /> },
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5 mr-2" /> },
+    { name: 'POS Billing', path: '/', icon: <Calculator className="w-4 h-4 mr-1.5" /> },
+    { name: 'Invoices & Sales', path: '/invoices', icon: <FileText className="w-4 h-4 mr-1.5" /> },
+    { 
+      name: 'Service Reminders', 
+      path: '/reminders', 
+      icon: <BellRing className="w-4 h-4 mr-1.5" />,
+      badge: dueCount > 0 ? dueCount : null 
+    },
+    { name: 'Customers & CRM', path: '/customers', icon: <Users className="w-4 h-4 mr-1.5" /> },
+    { name: 'Job Cards & Builds', path: '/job-cards', icon: <ClipboardList className="w-4 h-4 mr-1.5" /> },
+    { name: 'Parts & Rates', path: '/inventory', icon: <Package className="w-4 h-4 mr-1.5" /> },
+    { name: 'Settings & Automation', path: '/settings', icon: <Settings className="w-4 h-4 mr-1.5" /> },
   ];
 
   return (
-    <nav className="bg-red-700 text-white shadow-lg">
-      <div className="container mx-auto px-4">
+    <header className="bg-white border-b border-slate-200/90 sticky top-0 z-40 print:hidden shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-2">
-            <Wrench className="w-8 h-8" />
-            <span className="font-bold text-xl tracking-wider">RE WORKSHOP</span>
+          
+          {/* Brand & Identity */}
+          <Link to="/" className="flex items-center space-x-3 group">
+            <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs">
+              <Wrench className="w-5 h-5 text-orange-400" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-black text-base tracking-tight text-slate-900">
+                  Custom Garage & Workshop
+                </span>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                  POS
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-medium">Motorcycle Modifications & Billing</p>
+            </div>
+          </Link>
+
+          {/* Navigation Links */}
+          <nav className="flex items-center space-x-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors relative ${
+                    isActive
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.name}</span>
+                  {item.badge && (
+                    <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] bg-red-500 text-white font-bold animate-pulse">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* USB Offline Status Badge */}
+          <div className="hidden xl:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-850 text-xs font-bold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <HardDrive className="w-3.5 h-3.5" />
+            <span>100% Offline</span>
           </div>
-          <div className="flex space-x-4">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-                  location.pathname === item.path
-                    ? 'bg-red-800 text-white font-medium shadow-inner'
-                    : 'text-red-100 hover:bg-red-600'
-                }`}
-              >
-                {item.icon}
-                {item.name}
-              </Link>
-            ))}
-          </div>
+
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

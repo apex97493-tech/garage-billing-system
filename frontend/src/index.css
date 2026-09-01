@@ -2,8 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  body {
-    @apply antialiased;
+/* Explicit Global Light Theme Enforcement */
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Force crystal clear black/dark text inside all form inputs */
+input, select, textarea {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  font-weight: 500;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+  font-weight: 400;
+}
+
+/* Subtle, clean modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Print Specific Rules for Clean Invoices */
+@media print {
+  html, body, #root {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  .print\\:hidden {
+    display: none !important;
+  }
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\\:border-none {
+    border: none !important;
+  }
+  .print\\:p-0 {
+    padding: 0 !important;
+  }
+  nav, footer, .no-print {
+    display: none !important;
   }
 }
