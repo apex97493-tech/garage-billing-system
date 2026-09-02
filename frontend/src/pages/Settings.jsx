@@ -94,27 +94,27 @@ export default function Settings() {
     }
   };
 
-  const handleDisconnectWhatsapp = async () => {
-    if (window.confirm('Are you sure you want to disconnect this WhatsApp number?')) {
-      setDisconnecting(true);
-      try {
-        setWhatsappStatus({
-          isConnected: false,
-          isConnecting: false,
-          connectedPhone: null,
-          hasQR: false,
-          qrCodeDataUrl: null
-        });
-        await axios.post(`${API_URL}/whatsapp/disconnect`);
-        setTimeout(() => {
-          fetchWhatsappStatus();
-          setDisconnecting(false);
-        }, 800);
-      } catch (err) {
-        console.error('Error disconnecting WhatsApp:', err);
-        setDisconnecting(false);
-        alert('Failed to disconnect WhatsApp.');
+  const handleDisconnectWhatsapp = async (e) => {
+    if (e) e.preventDefault();
+    setDisconnecting(true);
+    try {
+      setWhatsappStatus({
+        isConnected: false,
+        isConnecting: true,
+        connectedPhone: null,
+        hasQR: false,
+        qrCodeDataUrl: null
+      });
+      const res = await axios.post(`${API_URL}/whatsapp/disconnect`);
+      if (res.data?.status) {
+        setWhatsappStatus(res.data.status);
       }
+      setTimeout(fetchWhatsappStatus, 600);
+      setTimeout(fetchWhatsappStatus, 1500);
+    } catch (err) {
+      console.error('Error disconnecting WhatsApp:', err);
+    } finally {
+      setDisconnecting(false);
     }
   };
 
