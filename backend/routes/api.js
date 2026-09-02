@@ -38,7 +38,7 @@ router.post('/whatsapp/connect', async (req, res) => {
 router.post('/whatsapp/disconnect', async (req, res) => {
   try {
     const success = await whatsappBot.disconnect();
-    res.json({ success, message: 'WhatsApp session disconnected' });
+    res.json({ success, status: whatsappBot.getStatus(), message: 'WhatsApp session disconnected' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
