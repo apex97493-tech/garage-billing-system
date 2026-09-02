@@ -17,10 +17,8 @@ export function downloadInvoicePDF(invoice, settings) {
   const address = settings?.address || '';
   const phone = settings?.contactNumber || '';
   const gstin = settings?.gstin || '';
-  const upiId = settings?.upiId || '';
-  const bankDetails = settings?.bankDetails || '';
-  const currency = settings?.currency || 'Rs.';
-  const taxLabel = settings?.taxLabel || 'GST';
+  const rawCurrency = settings?.currency || 'Rs.';
+  const currency = (rawCurrency === '₹' || rawCurrency.includes('₹')) ? 'Rs.' : rawCurrency;
   const terms = settings?.terms || 'Goods once sold cannot be returned. Workmanship guaranteed for 30 days.';
 
   const billType = invoice.billType || 'Tax Invoice';

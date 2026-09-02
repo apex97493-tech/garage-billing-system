@@ -21,12 +21,12 @@
       "bikeModel": "Royal Enfield Continental GT 650",
       "regNo": "RJ14AB2134",
       "vinNo": "",
-      "visitCount": 5,
-      "totalSpent": 41935,
+      "visitCount": 6,
+      "totalSpent": 44585,
       "lastKm": 1223,
-      "lastVisited": "2026-09-02T06:11:51.972Z",
+      "lastVisited": "2026-09-02T06:36:00.821Z",
       "createdAt": "2026-09-01T10:36:24.639Z",
-      "updatedAt": "2026-09-02T06:11:51.972Z"
+      "updatedAt": "2026-09-02T06:36:00.821Z"
     },
     {
       "id": "cust_1788021926791_t612",
@@ -216386,6 +216386,65 @@
     }
   ],
   "invoices": [
+    {
+      "id": "inv_1788330960903",
+      "_id": "inv_1788330960903",
+      "invoiceNo": "MOD-1007",
+      "billType": "Estimate",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2027-03-02T06:36:00.602Z",
+      "items": [
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 1,
+          "unitPrice": 1200,
+          "gstRate": 0,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_2",
+          "partName": "Throttle Body / Injector Ultrasonic Cleaning",
+          "qty": 1,
+          "unitPrice": 750,
+          "gstRate": 0,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_3",
+          "partName": "Brake Fluid Flush & Hydraulic Bleed",
+          "qty": 1,
+          "unitPrice": 450,
+          "gstRate": 0,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_5",
+          "partName": "Chain Cleaning, Lube & Tension Setting",
+          "qty": 1,
+          "unitPrice": 250,
+          "gstRate": 0,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 2650,
+      "totalGst": 0,
+      "discount": 0,
+      "grandTotal": 2650,
+      "advancePaid": 2000,
+      "balanceDue": 650,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-02T06:36:00.903Z"
+    },
     {
       "id": "inv_1788330187159",
       "_id": "inv_1788330187159",

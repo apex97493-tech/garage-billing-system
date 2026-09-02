@@ -1,14 +1,16 @@
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
 
 /**
- * Generate a clean, professional A4 Tax / Pre-Invoice / Estimate PDF Buffer on the backend
+ * Generate a clean, professional, high-end A4 Tax / Pre-Invoice / Estimate PDF Buffer on the backend for WhatsApp delivery
  */
 export async function generateInvoicePdfBuffer(invoice, settings) {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({
         size: 'A4',
-        margin: 36
+        margin: 36,
+        autoFirstPage: true
       });
 
       const buffers = [];
@@ -18,15 +20,18 @@ export async function generateInvoicePdfBuffer(invoice, settings) {
         resolve(pdfBuffer);
       });
 
-      const shopName = (settings?.shopName || 'ROYAL ENFIELD WORKSHOP & SERVICE STUDIO').toUpperCase();
+      const shopName = (settings?.shopName || 'ROYAL ENFIELD WORKSHOP STUDIO').toUpperCase();
       const tagline = settings?.tagline || 'Motorcycle Service, Spares & Modifications';
-      const address = settings?.address || '';
+      const address = settings?.address || 'Industrial Area, Auto Market';
       const phone = settings?.contactNumber || '';
       const gstin = settings?.gstin || '';
       const upiId = settings?.upiId || '';
-      const currency = settings?.currency || 'Rs.';
+      
+      // Fix: PDFKit standard fonts do not support unicode ₹ and print as "¹". Use "Rs." safely.
+      const rawCurrency = settings?.currency || 'Rs.';
+      const currency = (rawCurrency === '₹' || rawCurrency.includes('₹')) ? 'Rs.' : rawCurrency;
       const taxLabel = settings?.taxLabel || 'GST';
-      const terms = settings?.terms || 'Goods once sold cannot be returned. Workmanship guaranteed for 30 days.';
+      const terms = settings?.terms || '1. Goods once sold cannot be returned.\n2. Workmanship guaranteed for 30 days.\n3. All replaced old parts must be claimed at delivery.';
 
       const billType = invoice.billType || 'Tax Invoice';
       const isGst = billType === 'Tax Invoice';
@@ -48,132 +53,166 @@ export async function generateInvoicePdfBuffer(invoice, settings) {
         year: 'numeric'
       });
 
-      // Top Header Background
-      doc.rect(36, 36, 523, 75).fillAndStroke('#f8fafc', '#cbd5e1');
+      // --- 1. Top Header Box ---
+      const headerY = 36;
+      const headerHeight = 78;
+      doc.roundedRect(36, headerY, 523, headerHeight, 4).fillAndStroke('#f8fafc', '#cbd5e1');
 
-      // Shop Name & Details
-      doc.fillColor('#0f172a').fontSize(15).font('Helvetica-Bold').text(shopName, 48, 48);
-      doc.fillColor('#475569').fontSize(8.5).font('Helvetica').text(tagline, 48, 68);
-      doc.fontSize(8).text(`${address}  |  Phone: ${phone}` + (isGst && gstin ? `  |  ${taxLabel}: ${gstin}` : ''), 48, 80, { width: 320 });
+      // Logo rendering (if uploaded)
+      let textLeft = 48;
+      let textMaxWidth = 310;
+      if (settings?.logo) {
+        try {
+          let logoBuffer = null;
+          if (settings.logo.startsWith('data:image/')) {
+            const base64Data = settings.logo.split(';base64,').pop();
+            logoBuffer = Buffer.from(base64Data, 'base64');
+          } else if (fs.existsSync(settings.logo)) {
+            logoBuffer = fs.readFileSync(settings.logo);
+          }
 
-      // Invoice Details (Right Side)
-      doc.fillColor('#0f172a').fontSize(11).font('Helvetica-Bold').text(billHeaderTitle, 380, 48, { align: 'right', width: 165 });
-      doc.fontSize(10).text(invoiceNo, 380, 64, { align: 'right', width: 165 });
-      doc.fillColor('#475569').fontSize(8.5).font('Helvetica').text(`Date: ${invDate}`, 380, 78, { align: 'right', width: 165 });
-      doc.text(`Mode: ${invoice.paymentMethod || 'UPI'}`, 380, 90, { align: 'right', width: 165 });
+          if (logoBuffer) {
+            // White circular/rounded container for logo
+            doc.roundedRect(46, headerY + 12, 54, 54, 6).fillAndStroke('#ffffff', '#e2e8f0');
+            doc.image(logoBuffer, 49, headerY + 15, { width: 48, height: 48, fit: [48, 48], align: 'center', valign: 'center' });
+            textLeft = 110;
+            textMaxWidth = 250;
+          }
+        } catch (e) {
+          console.warn('[PDF Logo Embed]:', e.message);
+        }
+      }
+
+      // Shop Name & Details (Dynamic Flow)
+      let currentHeaderY = headerY + 10;
+      doc.fillColor('#0f172a').fontSize(11).font('Helvetica-Bold').text(shopName, textLeft, currentHeaderY, { width: textMaxWidth });
+      currentHeaderY = doc.y + 2;
+      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(tagline, textLeft, currentHeaderY, { width: textMaxWidth });
+      currentHeaderY = doc.y + 2;
+      doc.fontSize(7).fillColor('#64748b').text(address, textLeft, currentHeaderY, { width: textMaxWidth, height: 16 });
+      currentHeaderY = doc.y + 2;
+      doc.fontSize(7).fillColor('#475569').text(`Phone: ${phone}` + (isGst && gstin ? `  |  ${taxLabel}: ${gstin}` : ''), textLeft, currentHeaderY, { width: textMaxWidth });
+
+      // Invoice Details & Title Pill (Right Side)
+      const badgeWidth = Math.max(90, billHeaderTitle.length * 6.5 + 16);
+      const badgeX = 559 - badgeWidth - 10;
+      const badgeBg = billType === 'Pre-Invoice' ? '#1e3a8a' : (billType === 'Estimate' ? '#334155' : '#0f172a');
+      doc.roundedRect(badgeX, headerY + 10, badgeWidth, 16, 3).fill(badgeBg);
+      doc.fillColor('#ffffff').fontSize(7.5).font('Helvetica-Bold').text(billHeaderTitle, badgeX, headerY + 14, { width: badgeWidth, align: 'center' });
+
+      doc.fillColor('#0f172a').fontSize(9.5).font('Helvetica-Bold').text(invoiceNo, 370, headerY + 30, { align: 'right', width: 175 });
+      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(`Date: ${invDate}  |  Mode: ${invoice.paymentMethod || 'UPI'}`, 370, headerY + 44, { align: 'right', width: 175 });
 
       if (invoice.balanceDue > 0) {
-        doc.fillColor('#b45309').font('Helvetica-Bold').text(`Balance: ${currency} ${invoice.balanceDue}`, 380, 100, { align: 'right', width: 165 });
+        doc.fillColor('#9a3412').font('Helvetica-Bold').fontSize(8).text(`Balance Due: ${currency} ${invoice.balanceDue}`, 370, headerY + 57, { align: 'right', width: 175 });
       } else {
-        doc.fillColor('#15803d').font('Helvetica-Bold').text('Status: FULLY PAID', 380, 100, { align: 'right', width: 165 });
+        doc.fillColor('#166534').font('Helvetica-Bold').fontSize(8).text('Status: FULLY PAID', 370, headerY + 57, { align: 'right', width: 175 });
       }
 
-      // Customer & Vehicle Box
-      doc.rect(36, 120, 523, 55).fillAndStroke('#ffffff', '#cbd5e1');
+      // --- 2. Customer & Vehicle Box ---
+      const infoBoxY = headerY + headerHeight + 8;
+      doc.roundedRect(36, infoBoxY, 523, 48, 4).fillAndStroke('#ffffff', '#cbd5e1');
 
-      // Customer Info
-      doc.fillColor('#64748b').fontSize(7.5).font('Helvetica-Bold').text('CUSTOMER DETAILS', 48, 128);
-      doc.fillColor('#0f172a').fontSize(9.5).font('Helvetica-Bold').text(cust.name, 48, 140);
-      doc.fillColor('#334155').fontSize(8.5).font('Helvetica').text(`Phone: ${cust.phone}`, 48, 154);
+      // Customer Info (Left)
+      doc.fillColor('#64748b').fontSize(7).font('Helvetica-Bold').text('CUSTOMER DETAILS', 48, infoBoxY + 8);
+      doc.fillColor('#0f172a').fontSize(9).font('Helvetica-Bold').text(cust.name || 'Valued Client', 48, infoBoxY + 18, { width: 230, ellipsis: true });
+      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(`Phone: ${cust.phone || 'N/A'}`, 48, infoBoxY + 31);
 
-      // Vehicle Info
-      doc.fillColor('#64748b').fontSize(7.5).font('Helvetica-Bold').text('MOTORCYCLE & SERVICE SPECS', 300, 128);
-      doc.fillColor('#0f172a').fontSize(9.5).font('Helvetica-Bold').text(cust.bikeModel, 300, 140);
-      doc.fillColor('#334155').fontSize(8.5).font('Helvetica').text(`Reg No: ${cust.regNo || 'Bespoke'}`, 300, 154);
-      if (invoice.currentKm > 0) {
-        doc.text(`Kilometre: ${invoice.currentKm} KM`, 300, 164);
-      }
+      // Vehicle Info (Right)
+      doc.fillColor('#64748b').fontSize(7).font('Helvetica-Bold').text('MOTORCYCLE & SERVICE SPECS', 300, infoBoxY + 8);
+      doc.fillColor('#0f172a').fontSize(9).font('Helvetica-Bold').text(cust.bikeModel || 'Royal Enfield', 300, infoBoxY + 18, { width: 245, ellipsis: true });
+      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(`Reg No: ${cust.regNo || 'Bespoke'}` + (invoice.currentKm > 0 ? `  |  Kilometre: ${invoice.currentKm} KM` : ''), 300, infoBoxY + 31);
 
-      // Items Table Header
-      let tableY = 185;
-      doc.rect(36, tableY, 523, 20).fillAndStroke('#0f172a', '#0f172a');
-      doc.fillColor('#ffffff').fontSize(8).font('Helvetica-Bold');
-      doc.text('#', 44, tableY + 6);
-      doc.text('Description of Parts & Services', 70, tableY + 6);
-      doc.text('Qty', 350, tableY + 6, { width: 30, align: 'center' });
-      doc.text(`Rate (${currency})`, 390, tableY + 6, { width: 50, align: 'right' });
+      // --- 3. Items Table ---
+      let tableY = infoBoxY + 56;
+      doc.roundedRect(36, tableY, 523, 18, 2).fillAndStroke('#0f172a', '#0f172a');
+      doc.fillColor('#ffffff').fontSize(7.5).font('Helvetica-Bold');
+      doc.text('#', 44, tableY + 5);
+      doc.text('Description of Parts & Services', 68, tableY + 5);
+      doc.text('Qty', 345, tableY + 5, { width: 30, align: 'center' });
+      doc.text(`Rate (${currency})`, 380, tableY + 5, { width: 55, align: 'right' });
       if (isGst) {
-        doc.text(`${taxLabel}%`, 450, tableY + 6, { width: 30, align: 'right' });
+        doc.text(`${taxLabel}%`, 440, tableY + 5, { width: 35, align: 'right' });
       }
-      doc.text(`Total (${currency})`, 490, tableY + 6, { width: 60, align: 'right' });
+      doc.text(`Total (${currency})`, 480, tableY + 5, { width: 70, align: 'right' });
 
-      tableY += 20;
+      tableY += 18;
 
       // Table Rows
-      doc.font('Helvetica').fontSize(8).fillColor('#0f172a');
       (invoice.items || []).forEach((item, idx) => {
         const lineBase = (item.qty || 1) * (item.unitPrice || 0);
         const lineGst = isGst ? lineBase * ((item.gstRate || 0) / 100) : 0;
         const lineTotal = lineBase + lineGst;
 
         const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-        doc.rect(36, tableY, 523, 18).fillAndStroke(rowBg, '#e2e8f0');
+        doc.rect(36, tableY, 523, 16).fillAndStroke(rowBg, '#e2e8f0');
 
-        doc.fillColor('#64748b').text(String(idx + 1), 44, tableY + 5);
-        doc.fillColor('#0f172a').font('Helvetica-Bold').text(item.partName + (item.isLabour ? ' (Service)' : ''), 70, tableY + 5, { width: 270 });
-        doc.font('Helvetica').text(String(item.qty || 1), 350, tableY + 5, { width: 30, align: 'center' });
-        doc.text((item.unitPrice || 0).toFixed(2), 390, tableY + 5, { width: 50, align: 'right' });
+        doc.font('Helvetica').fontSize(7.5).fillColor('#64748b').text(String(idx + 1), 44, tableY + 4);
+        doc.fillColor('#0f172a').font('Helvetica-Bold').text(item.partName + (item.isLabour ? ' (Service)' : ''), 68, tableY + 4, { width: 270, ellipsis: true });
+        doc.font('Helvetica').text(String(item.qty || 1), 345, tableY + 4, { width: 30, align: 'center' });
+        doc.text((item.unitPrice || 0).toFixed(2), 380, tableY + 4, { width: 55, align: 'right' });
         if (isGst) {
-          doc.text(`${item.gstRate || 0}%`, 450, tableY + 5, { width: 30, align: 'right' });
+          doc.text(`${item.gstRate || 0}%`, 440, tableY + 4, { width: 35, align: 'right' });
         }
-        doc.font('Helvetica-Bold').text(lineTotal.toFixed(2), 490, tableY + 5, { width: 60, align: 'right' });
+        doc.font('Helvetica-Bold').text(lineTotal.toFixed(2), 480, tableY + 4, { width: 70, align: 'right' });
 
-        tableY += 18;
+        tableY += 16;
       });
 
       tableY += 10;
 
-      // Summary Box (Right)
+      // --- 4. Summary Box & Terms ---
       const sumBoxX = 350;
       const sumBoxWidth = 209;
-      const boxHeight = (isGst && invoice.totalGst > 0) ? 75 : 62;
-      doc.rect(sumBoxX, tableY, sumBoxWidth, boxHeight).fillAndStroke('#f8fafc', '#cbd5e1');
+      const boxHeight = (isGst && invoice.totalGst > 0) ? 68 : 56;
+      doc.roundedRect(sumBoxX, tableY, sumBoxWidth, boxHeight, 4).fillAndStroke('#f8fafc', '#cbd5e1');
 
-      doc.fontSize(8.5).font('Helvetica').fillColor('#475569');
-      let currSumY = tableY + 8;
+      doc.fontSize(8).font('Helvetica').fillColor('#475569');
+      let currSumY = tableY + 6;
       doc.text('Subtotal:', sumBoxX + 10, currSumY);
-      doc.text(`${currency} ${(invoice.subtotal || 0).toFixed(2)}`, sumBoxX + 100, currSumY, { width: 95, align: 'right' });
+      doc.text(`${currency} ${(invoice.subtotal || 0).toFixed(2)}`, sumBoxX + 80, currSumY, { width: 115, align: 'right' });
 
       if (isGst && invoice.totalGst > 0) {
-        currSumY += 12;
+        currSumY += 11;
         doc.text(`Total ${taxLabel}:`, sumBoxX + 10, currSumY);
-        doc.text(`${currency} ${(invoice.totalGst || 0).toFixed(2)}`, sumBoxX + 100, currSumY, { width: 95, align: 'right' });
+        doc.text(`${currency} ${(invoice.totalGst || 0).toFixed(2)}`, sumBoxX + 80, currSumY, { width: 115, align: 'right' });
       }
 
-      currSumY += 14;
+      currSumY += 12;
       doc.moveTo(sumBoxX + 8, currSumY).lineTo(sumBoxX + sumBoxWidth - 8, currSumY).stroke('#cbd5e1');
 
-      currSumY += 6;
-      doc.fillColor('#0f172a').font('Helvetica-Bold').fontSize(10);
+      currSumY += 5;
+      doc.fillColor('#0f172a').font('Helvetica-Bold').fontSize(9);
       doc.text('Grand Total:', sumBoxX + 10, currSumY);
-      doc.text(`${currency} ${invoice.grandTotal || 0}`, sumBoxX + 100, currSumY, { width: 95, align: 'right' });
+      doc.text(`${currency} ${invoice.grandTotal || 0}`, sumBoxX + 80, currSumY, { width: 115, align: 'right' });
 
       if (invoice.advancePaid > 0) {
-        currSumY += 12;
-        doc.font('Helvetica').fontSize(8.5).fillColor('#15803d');
+        currSumY += 11;
+        doc.font('Helvetica').fontSize(7.5).fillColor('#166534');
         doc.text('Advance Paid:', sumBoxX + 10, currSumY);
-        doc.text(`- ${currency} ${invoice.advancePaid}`, sumBoxX + 100, currSumY, { width: 95, align: 'right' });
+        doc.text(`- ${currency} ${invoice.advancePaid}`, sumBoxX + 80, currSumY, { width: 115, align: 'right' });
 
-        currSumY += 10;
-        doc.font('Helvetica-Bold').fontSize(9).fillColor('#b45309');
+        currSumY += 9;
+        doc.font('Helvetica-Bold').fontSize(8).fillColor('#9a3412');
         doc.text('Balance Due:', sumBoxX + 10, currSumY);
-        doc.text(`${currency} ${invoice.balanceDue || 0}`, sumBoxX + 100, currSumY, { width: 95, align: 'right' });
+        doc.text(`${currency} ${invoice.balanceDue || 0}`, sumBoxX + 80, currSumY, { width: 115, align: 'right' });
       }
 
-      // Terms & Conditions (Left)
-      doc.fillColor('#0f172a').fontSize(8).font('Helvetica-Bold').text('TERMS & WARRANTY CONDITIONS:', 36, tableY + 10);
-      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(terms, 36, tableY + 22, { width: 290 });
+      // Terms & Conditions (Left side)
+      doc.fillColor('#0f172a').fontSize(7.5).font('Helvetica-Bold').text('TERMS & WARRANTY CONDITIONS:', 36, tableY + 4);
+      doc.fillColor('#475569').fontSize(6.8).font('Helvetica').text(terms, 36, tableY + 15, { width: 290, height: 40 });
 
       if (upiId) {
-        doc.fillColor('#0f172a').fontSize(8).font('Helvetica-Bold').text(`Pay via UPI: ${upiId}`, 36, tableY + 55);
+        doc.fillColor('#0f172a').fontSize(7.5).font('Helvetica-Bold').text(`Instant UPI Payment ID: ${upiId}`, 36, tableY + 58);
       }
 
       // Authorized Signatory
-      doc.fillColor('#64748b').fontSize(7.5).text('Authorized Signatory / Workshop Manager', sumBoxX + 10, tableY + boxHeight + 25);
-      doc.moveTo(sumBoxX + 10, tableY + boxHeight + 20).lineTo(sumBoxX + sumBoxWidth - 10, tableY + boxHeight + 20).stroke('#cbd5e1');
+      const signY = tableY + boxHeight + 24;
+      doc.moveTo(sumBoxX + 10, signY).lineTo(sumBoxX + sumBoxWidth - 10, signY).stroke('#94a3b8');
+      doc.fillColor('#64748b').fontSize(7).font('Helvetica').text('Authorized Signatory / Workshop Manager', sumBoxX + 10, signY + 4, { width: sumBoxWidth - 20, align: 'center' });
 
       // Footer
-      doc.fillColor('#94a3b8').fontSize(7.5).text(`Thank you for choosing ${shopName}. Ride Safe!`, 36, 780, { align: 'center', width: 523 });
+      doc.fillColor('#94a3b8').fontSize(7).text(`Thank you for choosing ${shopName}. Safe Riding!`, 36, 785, { align: 'center', width: 523 });
 
       doc.end();
     } catch (err) {
