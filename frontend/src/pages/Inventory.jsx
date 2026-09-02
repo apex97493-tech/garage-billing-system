@@ -1,36 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, Search, Package, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
-
-const CATALOG_PACKS = [
-  {
-    id: 'multi_brand_service',
-    title: 'Multi-Brand Service & Maintenance Pack',
-    desc: 'Oils, filters, spark plugs, brake pads, chain sprockets, fork overhaul, general service labor'
-  },
-  {
-    id: 'custom_modifier',
-    title: 'Custom Modification & Fabrication Pack',
-    desc: 'Free-flow exhausts, cafe seats, clip-ons, LED headlights, TIG welding, candy paint'
-  },
-  {
-    id: 'superbike_performance',
-    title: 'Superbike & Performance Tuning Pack',
-    desc: 'Motul 300V, Brembo pads, BMC air filters, ECU flashing, dyno tuning, quickshifters'
-  },
-  {
-    id: 'ev_workshop',
-    title: 'Electric 2-Wheeler & EV Service Pack',
-    desc: 'Battery diagnostics, BLDC motor hub overhaul, regenerative brakes, controller flashing'
-  }
-];
 
 export default function Inventory() {
   const [parts, setParts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,23 +100,6 @@ export default function Inventory() {
     }
   };
 
-  const handleApplyTemplate = async (templateKey, mode = 'replace') => {
-    const confirmMsg = mode === 'replace' 
-      ? `Replace parts catalog with the '${templateKey}' preset template? (Custom added items will be replaced)`
-      : `Add '${templateKey}' preset items to your existing catalog?`;
-    
-    if (window.confirm(confirmMsg)) {
-      try {
-        await axios.post(`${API_URL}/catalog/apply-template`, { templateKey, mode });
-        setIsTemplateModalOpen(false);
-        fetchParts();
-      } catch (err) {
-        console.error('Error applying template:', err);
-        alert('Error applying catalog template.');
-      }
-    }
-  };
-
   const categories = ['All', 'Service Labor', 'Maintenance', 'Brakes', 'Drivetrain', 'Electrical', 'Engine', 'Exhaust', 'Suspension', 'Controls', 'Bodywork', 'General Parts'];
 
   const filteredParts = useMemo(() => {
@@ -177,20 +136,12 @@ export default function Inventory() {
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">Parts, Labor & Service Catalog</h1>
             <p className="text-xs text-slate-500">
-              {parts.length.toLocaleString()} genuine parts and service labor rates
+              {parts.length.toLocaleString()} genuine Royal Enfield parts and service labor rates
             </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setIsTemplateModalOpen(true)}
-            className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 rounded-lg text-xs font-bold border border-purple-300 transition-colors flex items-center shadow-2xs"
-            title="Load industry catalog presets"
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1 text-purple-700" />
-            Industry Templates
-          </button>
           <button
             onClick={() => openModal()}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs flex items-center shadow-xs transition-colors"
@@ -375,64 +326,6 @@ export default function Inventory() {
           </div>
         </div>
       </div>
-
-      {/* Industry Catalog Presets Modal */}
-      {isTemplateModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-6 w-full max-w-xl text-slate-900">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <div>
-                <h2 className="text-base font-black text-slate-950 flex items-center">
-                  <Sparkles className="w-4 h-4 text-purple-600 mr-2" />
-                  Load Industry Catalog Template
-                </h2>
-                <p className="text-xs text-slate-500 font-medium">Instantly load standard parts & labor rates for any motorcycle workshop type</p>
-              </div>
-              <button
-                onClick={() => setIsTemplateModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 text-base font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {CATALOG_PACKS.map(pack => (
-                <div key={pack.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                  <h4 className="text-xs font-bold text-slate-900">{pack.title}</h4>
-                  <p className="text-[11px] text-slate-600 font-medium leading-relaxed">{pack.desc}</p>
-                  <div className="flex items-center space-x-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate(pack.id, 'replace')}
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-colors"
-                    >
-                      Install Pack
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate(pack.id, 'append')}
-                      className="px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 text-slate-800 rounded-lg text-xs font-bold transition-colors"
-                    >
-                      + Merge into Catalog
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-end pt-4 border-t border-slate-100 mt-4">
-              <button
-                type="button"
-                onClick={() => setIsTemplateModalOpen(false)}
-                className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 text-xs font-bold"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Add / Edit Part Modal */}
       {isModalOpen && (

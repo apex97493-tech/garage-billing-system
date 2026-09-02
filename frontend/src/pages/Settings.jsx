@@ -1,59 +1,36 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   Save, HardDrive, Download, Upload, CheckCircle2, 
-  RotateCcw, AlertTriangle, Sparkles, Building2, 
-  Smartphone, QrCode, ShieldCheck, RefreshCw, Unlink
+  RotateCcw, AlertTriangle, Building2, 
+  Smartphone, QrCode, ShieldCheck, RefreshCw, Unlink,
+  Image as ImageIcon, Trash2
 } from 'lucide-react';
-import { WORKSHOP_TYPES } from '../utils/bikeData';
 
 const API_URL = 'http://localhost:5000/api';
 
-const CATALOG_PACKS = [
-  {
-    id: 'multi_brand_service',
-    title: 'Multi-Brand Service & Maintenance Pack',
-    desc: 'Synthetic oils, filters, brake pads, chain sprockets, fork overhaul, general service labor'
-  },
-  {
-    id: 'custom_modifier',
-    title: 'Custom Modification & Fabrication Pack',
-    desc: 'Free-flow exhausts, cafe seats, clip-ons, LED headlights, TIG welding, candy paint'
-  },
-  {
-    id: 'superbike_performance',
-    title: 'Superbike & Performance Tuning Pack',
-    desc: 'Motul 300V, Brembo pads, BMC air filters, ECU flashing, dyno tuning, quickshifters'
-  },
-  {
-    id: 'ev_workshop',
-    title: 'Electric 2-Wheeler & EV Service Pack',
-    desc: 'Battery diagnostics, BLDC motor hub overhaul, regenerative brakes, controller flashing'
-  }
-];
-
 export default function Settings() {
   const [settings, setSettings] = useState({
-    shopName: '',
-    tagline: '',
-    workshopType: 'multi_brand_service',
-    contactNumber: '',
-    address: '',
+    logo: '',
+    shopName: 'ROYAL ENFIELD WORKSHOP STUDIO',
+    tagline: 'Genuine Parts, Periodic Service & Maintenance',
+    contactNumber: '+91 98765 43210',
+    address: 'Shop No. 12, Main Auto Market, Industrial Area',
     gstin: '',
-    upiId: '',
+    upiId: 'workshop@upi',
     currency: '₹',
     taxLabel: 'GST',
     autoSendBillWhatsapp: true,
     autoSendServiceReminders: true,
     reminderDaysBefore: 3,
     bankDetails: '',
-    terms: ''
+    terms: '1. Estimate is valid for 7 days from issue date.\n2. Replaced old parts must be claimed at delivery.\n3. All repair workmanship is guaranteed for 30 days.'
   });
 
   const [saved, setSaved] = useState(false);
-  const [templateStatus, setTemplateStatus] = useState('');
   const [restoreStatus, setRestoreStatus] = useState('');
-  const [dbStats, setDbStats] = useState({ customers: 0, invoices: 0, jobCards: 0, parts: 0 });
+  const [dbStats, setDbStats] = useState({ customers: 0, invoices: 0, parts: 0 });
+  const fileInputRef = useRef(null);
 
   // WhatsApp Free Bot State
   const [whatsappStatus, setWhatsappStatus] = useState({
@@ -63,7 +40,6 @@ export default function Settings() {
     hasQR: false,
     qrCodeDataUrl: null
   });
-  const [pollingQR, setPollingQR] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -85,16 +61,14 @@ export default function Settings() {
 
   const fetchStats = async () => {
     try {
-      const [cRes, iRes, jRes, pRes] = await Promise.all([
+      const [cRes, iRes, pRes] = await Promise.all([
         axios.get(`${API_URL}/customers`),
         axios.get(`${API_URL}/invoices`),
-        axios.get(`${API_URL}/job-cards`),
         axios.get(`${API_URL}/parts`),
       ]);
       setDbStats({
         customers: cRes.data.length,
         invoices: iRes.data.length,
-        jobCards: jRes.data.length,
         parts: pRes.data.length
       });
     } catch (err) {
@@ -131,6 +105,27 @@ export default function Settings() {
     }
   };
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Logo image must be smaller than 2MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSettings(prev => ({ ...prev, logo: event.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    setSettings(prev => ({ ...prev, logo: '' }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -143,31 +138,13 @@ export default function Settings() {
     }
   };
 
-  const handleApplyTemplate = async (templateKey, mode = 'replace') => {
-    const confirmMsg = mode === 'replace' 
-      ? `Replace parts catalog with the '${templateKey}' preset template? (Custom added items will be replaced)`
-      : `Add '${templateKey}' preset items to your existing catalog?`;
-    
-    if (window.confirm(confirmMsg)) {
-      try {
-        await axios.post(`${API_URL}/catalog/apply-template`, { templateKey, mode });
-        setTemplateStatus(`Applied '${templateKey}' template successfully!`);
-        fetchStats();
-        setTimeout(() => setTemplateStatus(''), 4000);
-      } catch (err) {
-        console.error('Error applying template:', err);
-        alert('Error applying catalog template.');
-      }
-    }
-  };
-
   const handleExportBackup = async () => {
     try {
       const res = await axios.get(`${API_URL}/backup`);
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(res.data, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `garage_backup_${new Date().toISOString().slice(0,10)}.json`);
+      downloadAnchor.setAttribute("download", `workshop_backup_${new Date().toISOString().slice(0,10)}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -198,74 +175,98 @@ export default function Settings() {
     reader.readAsText(file);
   };
 
-  const handleFactoryReset = async () => {
-    const confirmed = window.confirm(
-      'WARNING: This will clear all sample customers and test invoices for a clean fresh start. Parts catalog will be preserved. Are you sure?'
-    );
-    if (confirmed) {
-      try {
-        await axios.post(`${API_URL}/reset-data`);
-        alert('Workshop database reset to fresh clean start!');
-        fetchSettings();
-        fetchStats();
-      } catch (err) {
-        console.error('Error resetting database:', err);
-        alert('Error resetting database.');
-      }
-    }
-  };
-
   return (
     <div className="max-w-5xl mx-auto space-y-4">
       
       {/* Header */}
       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
         <h1 className="text-xl font-black text-slate-950 tracking-tight">Workshop Profile & Automation Settings</h1>
-        <p className="text-xs text-slate-500 mt-0.5 font-medium">Configure your business profile, connect free automated WhatsApp, customize taxes, and manage data</p>
+        <p className="text-xs text-slate-500 mt-0.5 font-medium">
+          Customize your workshop name, logo, phone number, automated WhatsApp, and billing setup
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         
-        {/* Left 2 Columns: Workshop Identity Form & Automated Messaging Toggles */}
+        {/* Left 2 Columns: Workshop Profile & Setup */}
         <div className="lg:col-span-2 space-y-4">
           
-          {/* Main Form */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
-            <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2 flex items-center">
-              <Building2 className="w-4 h-4 mr-1.5 text-slate-700" />
-              Workshop Business Profile & Tax Setup
-            </h2>
+          <form onSubmit={handleSave} className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-5">
+            
+            {/* Workshop Logo Block */}
+            <div className="border-b border-slate-100 pb-5">
+              <label className="block text-xs font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center">
+                <ImageIcon className="w-4 h-4 mr-1.5 text-slate-700" />
+                Workshop Logo (For Invoices & Bills)
+              </label>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              
-              {/* Workshop Type / Specialization */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Workshop Type / Specialization</label>
-                <select
-                  value={settings.workshopType || 'multi_brand_service'}
-                  onChange={e => setSettings({ ...settings, workshopType: e.target.value })}
-                  className="w-full px-3 py-2 bg-white text-slate-950 font-bold border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
-                >
-                  {WORKSHOP_TYPES.map(type => (
-                    <option key={type.id} value={type.id}>
-                      {type.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-slate-500 mt-1 font-medium">
-                  {WORKSHOP_TYPES.find(t => t.id === settings.workshopType)?.desc || ''}
-                </p>
+              <div className="flex flex-col sm:flex-row items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                {/* Logo Preview */}
+                <div className="w-24 h-24 rounded-lg border border-slate-300 bg-white flex items-center justify-center p-1 overflow-hidden shadow-2xs shrink-0">
+                  {settings.logo ? (
+                    <img src={settings.logo} alt="Workshop Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="text-center p-2 text-slate-400">
+                      <ImageIcon className="w-6 h-6 mx-auto mb-1 opacity-50" />
+                      <span className="text-[10px] font-bold block">No Logo</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload & Remove Controls */}
+                <div className="space-y-2 text-center sm:text-left flex-1">
+                  <p className="text-xs font-bold text-slate-900">Upload Shop Logo / Seal</p>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Recommended: PNG or JPG with transparent or white background. Appears automatically on all printed bills and WhatsApp PDF invoices.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                      id="logo-upload"
+                    />
+                    <label
+                      htmlFor="logo-upload"
+                      className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-2xs flex items-center"
+                    >
+                      <Upload className="w-3.5 h-3.5 mr-1" />
+                      {settings.logo ? 'Change Logo' : 'Upload Logo'}
+                    </label>
+
+                    {settings.logo && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveLogo}
+                        className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-bold transition-colors flex items-center"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        Remove Logo
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
+            </div>
+
+            {/* Shop Details */}
+            <div className="space-y-4">
+              <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center">
+                <Building2 className="w-4 h-4 mr-1.5 text-slate-700" />
+                Workshop Business Profile & Tax Setup
+              </h2>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Workshop / Studio Name *</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Workshop Name *</label>
                 <input
                   required
                   type="text"
                   className="w-full px-3 py-2 bg-white text-slate-950 font-bold placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                   value={settings.shopName}
                   onChange={e => setSettings({ ...settings, shopName: e.target.value })}
-                  placeholder="e.g. Apex Moto Works / Speed Custom Motorcycles"
+                  placeholder="e.g. Royal Enfield Workshop Studio"
                 />
               </div>
 
@@ -276,7 +277,7 @@ export default function Settings() {
                   className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                   value={settings.tagline}
                   onChange={e => setSettings({ ...settings, tagline: e.target.value })}
-                  placeholder="e.g. Multi-Brand Motorcycle Service, Modifications & Tuning"
+                  placeholder="e.g. Genuine Spares, Periodic Service & Modifications"
                 />
               </div>
 
@@ -309,7 +310,7 @@ export default function Settings() {
                     className="w-full px-3 py-2 bg-white text-slate-900 font-medium uppercase placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none text-center"
                     value={settings.taxLabel || 'GST'}
                     onChange={e => setSettings({ ...settings, taxLabel: e.target.value.toUpperCase() })}
-                    placeholder="GST / VAT"
+                    placeholder="GST"
                   />
                 </div>
               </div>
@@ -326,7 +327,7 @@ export default function Settings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">UPI ID (For Invoice QR Code)</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">UPI ID (For Instant QR on Bills)</label>
                   <input
                     type="text"
                     className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
@@ -338,48 +339,26 @@ export default function Settings() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Workshop Address *</label>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Workshop Full Address *</label>
                 <textarea
                   required
                   rows={2}
                   className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                   value={settings.address}
                   onChange={e => setSettings({ ...settings, address: e.target.value })}
-                  placeholder="Plot 42, Main Auto Market..."
+                  placeholder="Shop No. 12, Main Auto Market, Near Bus Stand..."
                 ></textarea>
               </div>
 
-              {/* Automated Messaging Toggles */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                  Automated Messaging Preferences
-                </h3>
-
-                <label className="flex items-center space-x-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.autoSendBillWhatsapp ?? true}
-                    onChange={e => setSettings({ ...settings, autoSendBillWhatsapp: e.target.checked })}
-                    className="rounded text-slate-900 focus:ring-0 w-4 h-4"
-                  />
-                  <div>
-                    <span className="text-xs font-bold text-slate-900 block">Auto-Send Bill on POS Checkout</span>
-                    <span className="text-[11px] text-slate-600 font-medium">Dispatches digital tax invoice breakdown to customer's WhatsApp instantly upon saving bill</span>
-                  </div>
-                </label>
-
-                <label className="flex items-center space-x-2.5 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.autoSendServiceReminders ?? true}
-                    onChange={e => setSettings({ ...settings, autoSendServiceReminders: e.target.checked })}
-                    className="rounded text-slate-900 focus:ring-0 w-4 h-4"
-                  />
-                  <div>
-                    <span className="text-xs font-bold text-slate-900 block">Daily Automated Periodic Service Reminders</span>
-                    <span className="text-[11px] text-slate-600 font-medium">Daily 10:00 AM background check to notify customers whose motorcycle is due for periodic maintenance</span>
-                  </div>
-                </label>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Bank Account Details (Optional)</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                  value={settings.bankDetails}
+                  onChange={e => setSettings({ ...settings, bankDetails: e.target.value })}
+                  placeholder="HDFC Bank | A/C: 502000... | IFSC: HDFC0001234"
+                />
               </div>
 
               <div>
@@ -392,27 +371,60 @@ export default function Settings() {
                   placeholder="1. Estimate valid for 7 days. 2. Workmanship guaranteed for 30 days..."
                 ></textarea>
               </div>
+            </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                {saved ? (
-                  <span className="text-emerald-800 text-xs font-bold flex items-center">
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Settings saved successfully!
-                  </span>
-                ) : <span></span>}
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs flex items-center shadow-xs transition-colors"
-                >
-                  <Save className="w-4 h-4 mr-1.5" />
-                  Save Settings
-                </button>
-              </div>
-            </form>
-          </div>
+            {/* Automated Messaging Preferences */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                Automated Messaging Preferences
+              </h3>
+
+              <label className="flex items-center space-x-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.autoSendBillWhatsapp ?? true}
+                  onChange={e => setSettings({ ...settings, autoSendBillWhatsapp: e.target.checked })}
+                  className="rounded text-slate-900 focus:ring-0 w-4 h-4"
+                />
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block">Auto-Send Bill on POS Checkout</span>
+                  <span className="text-[11px] text-slate-600 font-medium">Dispatches digital tax invoice breakdown to customer's WhatsApp instantly upon saving bill</span>
+                </div>
+              </label>
+
+              <label className="flex items-center space-x-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.autoSendServiceReminders ?? true}
+                  onChange={e => setSettings({ ...settings, autoSendServiceReminders: e.target.checked })}
+                  className="rounded text-slate-900 focus:ring-0 w-4 h-4"
+                />
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block">Daily Automated Periodic Service Reminders</span>
+                  <span className="text-[11px] text-slate-600 font-medium">Daily 10:00 AM background check to notify customers whose motorcycle is due for periodic maintenance</span>
+                </div>
+              </label>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              {saved ? (
+                <span className="text-emerald-800 text-xs font-bold flex items-center">
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Settings saved successfully!
+                </span>
+              ) : <span></span>}
+              <button
+                type="submit"
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg text-xs flex items-center shadow-xs transition-colors"
+              >
+                <Save className="w-4 h-4 mr-1.5" />
+                Save Settings
+              </button>
+            </div>
+          </form>
 
         </div>
 
-        {/* Right Column: Free WhatsApp Pairing & Industry Packs */}
+        {/* Right Column: Free WhatsApp Pairing & Data Backup */}
         <div className="space-y-4">
           
           {/* 100% Free WhatsApp Link Card */}
@@ -432,7 +444,7 @@ export default function Settings() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Link your shop phone once. All bills and service reminders send automatically from your WhatsApp at <strong>₹0 cost</strong>.
+              Link your workshop phone once. All bills and service reminders send automatically from your WhatsApp at <strong>₹0 cost</strong>.
             </p>
 
             {whatsappStatus.isConnected ? (
@@ -481,73 +493,40 @@ export default function Settings() {
             )}
           </div>
 
-          {/* Industry Preset Templates Pack */}
+          {/* Database Backup & Safety */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
             <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>Industry Catalog Packs</span>
-            </div>
-            
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Load instant pre-configured parts & labor rate catalogs tailored for different garage types:
-            </p>
-
-            <div className="space-y-2.5 pt-1">
-              {CATALOG_PACKS.map(pack => (
-                <div key={pack.id} className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-slate-900">{pack.title}</h4>
-                  </div>
-                  <p className="text-[11px] text-slate-600 font-medium leading-normal">
-                    {pack.desc}
-                  </p>
-                  <div className="flex items-center space-x-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate(pack.id, 'replace')}
-                      className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded text-[11px] font-bold transition-colors"
-                    >
-                      Install Pack
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTemplate(pack.id, 'append')}
-                      className="px-2 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-750 rounded text-[11px] font-bold transition-colors"
-                    >
-                      + Merge
-                    </button>
-                  </div>
-                </div>
-              ))}
+              <HardDrive className="w-4 h-4 text-blue-600" />
+              <span>Data Backup & Safety</span>
             </div>
 
-            {templateStatus && (
-              <p className="text-xs font-bold text-emerald-800 text-center bg-emerald-50 p-2 rounded border border-emerald-200">
-                {templateStatus}
-              </p>
-            )}
-          </div>
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-1">
+              <div className="flex justify-between font-medium text-slate-600">
+                <span>Total Genuine Parts:</span>
+                <strong className="text-slate-900 font-mono">{dbStats.parts.toLocaleString()}</strong>
+              </div>
+              <div className="flex justify-between font-medium text-slate-600">
+                <span>Customer Records:</span>
+                <strong className="text-slate-900 font-mono">{dbStats.customers.toLocaleString()}</strong>
+              </div>
+              <div className="flex justify-between font-medium text-slate-600">
+                <span>Invoices Generated:</span>
+                <strong className="text-slate-900 font-mono">{dbStats.invoices.toLocaleString()}</strong>
+              </div>
+            </div>
 
-          {/* Backup & Factory Reset */}
-          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-              Backup & Maintenance
-            </h3>
-
-            <div>
+            <div className="space-y-2 pt-1">
               <button
                 onClick={handleExportBackup}
-                className="w-full py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-300 rounded-lg text-xs font-bold flex items-center justify-center transition-colors shadow-2xs"
+                className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center justify-center transition-colors shadow-xs"
               >
-                <Download className="w-3.5 h-3.5 mr-1.5 text-slate-700" />
-                Export Backup (JSON)
+                <Download className="w-3.5 h-3.5 mr-1.5" />
+                Export Complete Data Backup
               </button>
-            </div>
 
-            <div className="pt-2 border-t border-slate-100">
-              <label className="w-full py-2 px-3 bg-white hover:bg-slate-50 border border-dashed border-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center cursor-pointer transition-colors shadow-2xs">
-                <Upload className="w-3.5 h-3.5 mr-1.5 text-slate-700" />
-                Restore from Backup JSON
+              <label className="w-full py-2 px-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center cursor-pointer transition-colors shadow-2xs">
+                <Upload className="w-3.5 h-3.5 mr-1.5 text-slate-600" />
+                Restore Data from File
                 <input
                   type="file"
                   accept=".json"
@@ -555,27 +534,19 @@ export default function Settings() {
                   className="hidden"
                 />
               </label>
+
               {restoreStatus && (
-                <p className="text-[11px] text-emerald-800 font-bold mt-1.5 text-center">
+                <p className="text-xs text-emerald-700 font-bold text-center">
                   {restoreStatus}
                 </p>
               )}
-            </div>
-
-            <div className="pt-2 border-t border-slate-100">
-              <button
-                onClick={handleFactoryReset}
-                className="w-full py-2 px-3 bg-red-50 hover:bg-red-100 text-red-800 border border-red-300 rounded-lg text-xs font-bold flex items-center justify-center transition-colors shadow-2xs"
-              >
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5 text-red-700" />
-                Reset to Clean Workshop
-              </button>
             </div>
           </div>
 
         </div>
 
       </div>
+
     </div>
   );
 }

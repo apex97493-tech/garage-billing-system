@@ -49,19 +49,30 @@ export function downloadInvoicePDF(invoice, settings) {
   doc.setDrawColor(226, 232, 240);
   doc.rect(14, 12, 182, 36, 'S');
 
-  // Shop Name & Details
+  // Shop Name, Logo & Details
+  let textStartX = 18;
+  if (settings?.logo) {
+    try {
+      doc.addImage(settings.logo, 18, 15, 18, 18);
+      textStartX = 40;
+    } catch (e) {
+      textStartX = 18;
+    }
+  }
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
+  doc.setFontSize(14);
   doc.setTextColor(15, 23, 42); // slate-900
-  doc.text(shopName, 18, 20);
+  doc.text(shopName, textStartX, 20);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(71, 85, 105); // slate-600
-  doc.text(tagline, 18, 25);
+  doc.text(tagline, textStartX, 25);
 
-  const addressLines = doc.splitTextToSize(`${address} | Phone: ${phone}` + (isGst && gstin ? ` | ${taxLabel} No: ${gstin}` : ''), 110);
-  doc.text(addressLines, 18, 30);
+  const maxAddrWidth = textStartX === 40 ? 88 : 110;
+  const addressLines = doc.splitTextToSize(`${address} | Phone: ${phone}` + (isGst && gstin ? ` | ${taxLabel} No: ${gstin}` : ''), maxAddrWidth);
+  doc.text(addressLines, textStartX, 30);
 
   // Invoice Number & Status on Right
   doc.setFont('helvetica', 'bold');

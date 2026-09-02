@@ -181,6 +181,13 @@ export default function PrintInvoice() {
         {/* Header Branding */}
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
           <div>
+            {settings.logo && (
+              <img 
+                src={settings.logo} 
+                alt="Workshop Logo" 
+                className="h-14 w-auto max-w-[180px] object-contain mb-2 rounded" 
+              />
+            )}
             <h1 className="text-xl font-black tracking-tight text-slate-950 uppercase">
               {settings.shopName}
             </h1>
