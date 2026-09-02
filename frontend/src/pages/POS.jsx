@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { downloadInvoicePDF } from '../utils/pdfGenerator';
-import { MOTORCYCLE_BRANDS, SERVICE_JOB_TYPES } from '../utils/bikeData';
+import { ROYAL_ENFIELD_MODELS } from '../utils/bikeData';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -18,11 +18,10 @@ export default function POS() {
   const [customer, setCustomer] = useState({ 
     phone: searchParams.get('phone') || '', 
     name: searchParams.get('customerName') || '', 
-    bikeModel: searchParams.get('bikeModel') || 'Royal Enfield Continental GT 650', 
+    bikeModel: searchParams.get('bikeModel') || 'Royal Enfield Classic 350', 
     regNo: searchParams.get('regNo') || '' 
   });
   const [vinNo, setVinNo] = useState('');
-  const [buildType, setBuildType] = useState(searchParams.get('buildType') || 'General Periodic Service & Tuning');
   const [currentKm, setCurrentKm] = useState('');
   const [nextServiceMonths, setNextServiceMonths] = useState(6);
   const [paymentMethod, setPaymentMethod] = useState('UPI');
@@ -108,7 +107,7 @@ export default function POS() {
     setCustomer({
       phone: selected.phone || '',
       name: selected.name || '',
-      bikeModel: selected.bikeModel || 'Royal Enfield Continental GT 650',
+      bikeModel: selected.bikeModel || 'Royal Enfield Classic 350',
       regNo: selected.regNo || ''
     });
     if (selected.lastKm) {
@@ -233,7 +232,6 @@ export default function POS() {
       customerData: customer,
       invoiceData: {
         vinNo,
-        buildType,
         currentKm: currentKmNum,
         nextServiceKm: currentKmNum + 4000,
         nextServiceDate: nextDate.toISOString(),
@@ -367,21 +365,19 @@ export default function POS() {
             />
           </div>
 
-          {/* Motorcycle Make & Model (Multi-Brand Datalist) */}
+          {/* Motorcycle Make & Model (Royal Enfield Models Datalist) */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Motorcycle Make & Model *</label>
             <input
-              list="all-bike-models"
+              list="royal-enfield-models"
               value={customer.bikeModel}
               onChange={e => setCustomer({ ...customer, bikeModel: e.target.value })}
               className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none"
-              placeholder="Select or enter bike model"
+              placeholder="Select Royal Enfield Model"
             />
-            <datalist id="all-bike-models">
-              {MOTORCYCLE_BRANDS.map(group => (
-                group.models.map(m => (
-                  <option key={`${group.brand}-${m}`} value={`${group.brand} ${m}`} />
-                ))
+            <datalist id="royal-enfield-models">
+              {ROYAL_ENFIELD_MODELS.map(model => (
+                <option key={model} value={model} />
               ))}
             </datalist>
           </div>
@@ -437,29 +433,16 @@ export default function POS() {
 
         </div>
 
-        {/* Secondary Specs */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-3 pt-3 border-t border-slate-100">
+        {/* Secondary Specs (Kilometre & Reminder Interval) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-3 pt-3 border-t border-slate-100">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Service / Job Category</label>
-            <input
-              list="service-job-types"
-              value={buildType}
-              onChange={e => setBuildType(e.target.value)}
-              className="w-full px-3 py-1.5 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
-              placeholder="e.g. Periodic Service, Custom Build"
-            />
-            <datalist id="service-job-types">
-              {SERVICE_JOB_TYPES.map(t => <option key={t} value={t} />)}
-            </datalist>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Current Odometer (KM)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Kilometre</label>
             <input
               type="number"
               placeholder="e.g. 12500"
               value={currentKm}
               onChange={e => setCurrentKm(e.target.value)}
-              className="w-full px-3 py-1.5 bg-white text-slate-900 font-mono font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
+              className="w-full px-3 py-2 bg-white text-slate-900 font-mono font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none"
             />
           </div>
           <div>
@@ -467,7 +450,7 @@ export default function POS() {
             <select
               value={nextServiceMonths}
               onChange={e => setNextServiceMonths(Number(e.target.value))}
-              className="w-full px-3 py-1.5 bg-white text-slate-900 font-medium border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
+              className="w-full px-3 py-2 bg-white text-slate-900 font-medium border border-slate-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none"
             >
               <option value={0}>⚡ Due Today (For Instant Testing)</option>
               <option value={1}>In 1 Month</option>
