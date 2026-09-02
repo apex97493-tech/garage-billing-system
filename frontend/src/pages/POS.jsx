@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { 
   Plus, Trash2, Printer, MessageSquare, Search, 
@@ -224,7 +224,6 @@ export default function POS() {
     const currentKmNum = Number(currentKm) || 0;
     const nextDate = new Date();
     if (Number(nextServiceMonths) === 0) {
-      // Due Today for instant test
       nextDate.setDate(nextDate.getDate());
     } else {
       nextDate.setMonth(nextDate.getMonth() + Number(nextServiceMonths));
@@ -294,14 +293,22 @@ export default function POS() {
   };
 
   // Distinct categories in partsList
-  const dynamicCategories = ['All', ...Array.from(new Set(partsList.map(p => p.category || 'General')))];
+  const dynamicCategories = ['All', 'Service Labor', 'Maintenance', 'Brakes', 'Drivetrain', 'Electrical', 'Engine', 'Exhaust', 'Suspension', 'Controls', 'Bodywork', 'General Parts'];
 
-  const filteredParts = partsList.filter(p => {
-    const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-    const matchesSearch = p.name.toLowerCase().includes(searchPart.toLowerCase()) || 
-                          (p.category || '').toLowerCase().includes(searchPart.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredParts = useMemo(() => {
+    const q = searchPart.toLowerCase().trim();
+    return partsList.filter(p => {
+      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+      const matchesSearch = !q || 
+        p.name.toLowerCase().includes(q) || 
+        (p.partNo && p.partNo.toLowerCase().includes(q)) ||
+        (p.category || '').toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
+    });
+  }, [partsList, selectedCategory, searchPart]);
+
+  // Display top 80 for instantaneous 60 FPS rendering
+  const visibleParts = filteredParts.slice(0, 80);
 
   return (
     <div className="space-y-4">
@@ -522,7 +529,7 @@ export default function POS() {
           {/* Catalog Box */}
           <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col h-[500px]">
             {/* Category tabs */}
-            <div className="flex items-center gap-1.5 flex-wrap pb-1 mb-2.5">
+            <div className="flex items-center gap-1.5 flex-wrap pb-1 mb-2.5 overflow-x-auto max-h-16">
               {dynamicCategories.map(cat => (
                 <button
                   key={cat}
@@ -540,25 +547,30 @@ export default function POS() {
             </div>
 
             {/* Search */}
-            <div className="relative mb-2.5">
+            <div className="relative mb-2">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search catalog items, rates..."
+                placeholder="Search across 21,600+ parts, part numbers..."
                 value={searchPart}
                 onChange={e => setSearchPart(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-900"
               />
             </div>
 
+            <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold mb-1.5 px-0.5">
+              <span>{filteredParts.length.toLocaleString()} matching parts</span>
+              {filteredParts.length > 80 && <span>Showing top 80 (type to filter)</span>}
+            </div>
+
             {/* Catalog Items */}
             <div className="flex-grow overflow-y-auto space-y-1.5 pr-1">
-              {filteredParts.length === 0 ? (
+              {visibleParts.length === 0 ? (
                 <div className="text-center py-12 text-slate-400 text-xs italic">
-                  No catalog items found. Add custom items above or install templates in Settings.
+                  No parts found matching "{searchPart}".
                 </div>
               ) : (
-                filteredParts.map(part => {
+                visibleParts.map(part => {
                   const isLabour = part.isLabour;
                   return (
                     <div
@@ -566,19 +578,23 @@ export default function POS() {
                       onClick={() => addItemToInvoice(part)}
                       className="p-2.5 bg-slate-50 hover:bg-slate-100/90 border border-slate-200 rounded-lg cursor-pointer transition-colors flex items-center justify-between group"
                     >
-                      <div>
-                        <div className="flex items-center space-x-1.5">
-                          <span className="font-bold text-xs text-slate-900">
+                      <div className="pr-2">
+                        <div className="flex items-center space-x-1.5 flex-wrap">
+                          <span className="font-bold text-xs text-slate-900 leading-snug">
                             {part.name}
                           </span>
-                          {isLabour && (
+                          {isLabour ? (
                             <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-purple-50 text-purple-700 border border-purple-200">
                               Service
                             </span>
+                          ) : (
+                            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200">
+                              {part.category || 'Part'}
+                            </span>
                           )}
                         </div>
-                        <div className="flex items-center space-x-2 text-[11px] text-slate-600 mt-0.5">
-                          <span className="text-slate-950 font-mono font-bold">{currency}{part.basePrice}</span>
+                        <div className="flex items-center space-x-2 text-[11px] text-slate-600 mt-1">
+                          <span className="text-slate-950 font-mono font-bold">{currency}{part.basePrice} (New MRP)</span>
                           <span>•</span>
                           <span className="font-medium">Tax {part.gstRate}%</span>
                           {!isLabour && (
@@ -591,7 +607,7 @@ export default function POS() {
                           )}
                         </div>
                       </div>
-                      <button className="p-1 rounded bg-white group-hover:bg-slate-900 group-hover:text-white border border-slate-300 text-slate-700 transition-colors shadow-2xs">
+                      <button className="p-1 rounded bg-white group-hover:bg-slate-900 group-hover:text-white border border-slate-300 text-slate-700 transition-colors shadow-2xs shrink-0">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>

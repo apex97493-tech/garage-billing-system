@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, Search, Package, Sparkles } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Package, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -35,10 +35,12 @@ export default function Inventory() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [settings, setSettings] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
   
   const [formData, setFormData] = useState({
     name: '',
-    category: 'General',
+    category: 'General Parts',
     basePrice: '',
     gstRate: 18,
     stock: '',
@@ -75,7 +77,7 @@ export default function Inventory() {
       setEditingId(part.id || part._id);
       setFormData({
         name: part.name || '',
-        category: part.category || 'General',
+        category: part.category || 'General Parts',
         basePrice: part.basePrice || '',
         gstRate: part.gstRate ?? 18,
         stock: part.stock ?? 0,
@@ -85,10 +87,10 @@ export default function Inventory() {
       setEditingId(null);
       setFormData({
         name: '',
-        category: 'General',
+        category: 'General Parts',
         basePrice: '',
         gstRate: 18,
-        stock: '10',
+        stock: '50',
         isLabour: false
       });
     }
@@ -139,17 +141,30 @@ export default function Inventory() {
     }
   };
 
-  // Distinct categories in parts
-  const categories = ['All', ...Array.from(new Set(parts.map(p => p.category || 'General')))];
+  const categories = ['All', 'Service Labor', 'Maintenance', 'Brakes', 'Drivetrain', 'Electrical', 'Engine', 'Exhaust', 'Suspension', 'Controls', 'Bodywork', 'General Parts'];
 
-  const filteredParts = parts.filter(part => {
-    const matchesCategory = selectedCategory === 'All' || part.category === selectedCategory;
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      (part.name || '').toLowerCase().includes(q) ||
-      (part.category || '').toLowerCase().includes(q);
-    return matchesCategory && matchesSearch;
-  });
+  const filteredParts = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return parts.filter(part => {
+      const matchesCategory = selectedCategory === 'All' || part.category === selectedCategory;
+      const matchesSearch = !q || 
+        (part.name || '').toLowerCase().includes(q) ||
+        (part.partNo && part.partNo.toLowerCase().includes(q)) ||
+        (part.category || '').toLowerCase().includes(q);
+      return matchesCategory && matchesSearch;
+    });
+  }, [parts, selectedCategory, searchQuery]);
+
+  // Reset to page 1 on filter/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
+
+  const totalPages = Math.ceil(filteredParts.length / itemsPerPage) || 1;
+  const paginatedParts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredParts.slice(start, start + itemsPerPage);
+  }, [filteredParts, currentPage]);
 
   return (
     <div className="space-y-4">
@@ -161,7 +176,9 @@ export default function Inventory() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">Parts, Labor & Service Catalog</h1>
-            <p className="text-xs text-slate-500">Manage parts inventory, service labor rates, oils, accessories, and industry templates</p>
+            <p className="text-xs text-slate-500">
+              {parts.length.toLocaleString()} total parts with genuine New MRP prices, service labor rates & stock
+            </p>
           </div>
         </div>
 
@@ -187,9 +204,8 @@ export default function Inventory() {
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
         {/* Category Pills */}
-        <div className="flex items-center gap-1.5 flex-wrap pb-1 md:pb-0">
+        <div className="flex items-center gap-1.5 flex-wrap pb-1 md:pb-0 overflow-x-auto max-w-full">
           {categories.map(cat => {
-            const count = cat === 'All' ? parts.length : parts.filter(p => p.category === cat).length;
             return (
               <button
                 key={cat}
@@ -201,20 +217,17 @@ export default function Inventory() {
                 }`}
               >
                 <span>{cat}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${selectedCategory === cat ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                  {count}
-                </span>
               </button>
             );
           })}
         </div>
 
         {/* Search Box */}
-        <div className="relative w-full md:w-64">
+        <div className="relative w-full md:w-72">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Search parts, rates..."
+            placeholder="Search across 21,600+ parts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-1.5 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-900"
@@ -224,28 +237,53 @@ export default function Inventory() {
 
       {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 font-medium">
+          <span>
+            Found <strong className="text-slate-900">{filteredParts.length.toLocaleString()}</strong> items
+            {searchQuery && ` for "${searchQuery}"`} (Page {currentPage} of {totalPages})
+          </span>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1 rounded bg-white border border-slate-300 disabled:opacity-30 hover:bg-slate-100 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="font-mono font-bold text-slate-900">{currentPage} / {totalPages}</span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1 rounded bg-white border border-slate-300 disabled:opacity-30 hover:bg-slate-100 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 uppercase tracking-wider font-bold">
-                <th className="p-3.5">Description / Item Name</th>
+                <th className="p-3.5">Part / Description</th>
                 <th className="p-3.5">Category</th>
                 <th className="p-3.5">Type</th>
-                <th className="p-3.5 text-right">Base Price ({currency})</th>
+                <th className="p-3.5 text-right">Price (New MRP)</th>
                 <th className="p-3.5 text-right">Tax %</th>
                 <th className="p-3.5 text-center">Stock</th>
                 <th className="p-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredParts.length === 0 ? (
+              {paginatedParts.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-slate-400 font-medium italic">
-                    No items found in this category. Click 'Industry Templates' above to install standard parts.
+                    No items found matching your criteria.
                   </td>
                 </tr>
               ) : (
-                filteredParts.map(part => {
+                paginatedParts.map(part => {
                   const partId = part.id || part._id;
                   const isLabour = part.isLabour;
                   const isLowStock = !isLabour && (part.stock || 0) < 5;
@@ -267,7 +305,7 @@ export default function Inventory() {
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 font-bold">
-                            Physical Part
+                            Genuine Part
                           </span>
                         )}
                       </td>
@@ -312,6 +350,29 @@ export default function Inventory() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Bottom Pagination Bar */}
+        <div className="p-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
+          <span className="text-slate-600">
+            Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredParts.length)} of {filteredParts.length.toLocaleString()}
+          </span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded bg-white border border-slate-300 font-bold disabled:opacity-40 hover:bg-slate-100 transition-colors flex items-center"
+            >
+              <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 rounded bg-white border border-slate-300 font-bold disabled:opacity-40 hover:bg-slate-100 transition-colors flex items-center"
+            >
+              Next <ChevronRight className="w-3.5 h-3.5 ml-1" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -440,7 +501,7 @@ export default function Inventory() {
                     className="w-full px-3 py-2 bg-white text-slate-900 font-mono font-bold placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none disabled:opacity-40"
                     value={formData.stock}
                     onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                    placeholder="10"
+                    placeholder="50"
                   />
                 </div>
               </div>
