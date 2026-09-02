@@ -1,26 +1,37 @@
 @echo off
-title Motorcycle Workshop & Modification Studio POS
-color 0F
+title Royal Enfield Workshop Studio POS
+color 0A
 
 echo =====================================================================
-echo       MOTORCYCLE WORKSHOP & MODIFICATION STUDIO POS
-echo          Standalone Desktop Edition (Zero-Install)
+echo          ROYAL ENFIELD WORKSHOP & MODIFICATION STUDIO
+echo              100%% Standalone Portable Edition
 echo =====================================================================
 echo.
 cd /d "%~dp0"
 
-:: Ensure data directory exists for database
+:: Ensure data directory exists
 if not exist "data" mkdir data
 
-echo Starting Workshop Engine on http://localhost:5000...
+echo [1/2] Initializing Embedded Engine...
+echo [2/2] Launching Workshop Studio...
 echo.
 
-:: Open browser automatically
-start http://localhost:5000
+:: Try opening in Native App Window mode (Chrome / Edge) for premium look
+if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+    start "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --app=http://localhost:5000 --window-size=1366,768
+) else if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
+    start "" "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --app=http://localhost:5000 --window-size=1366,768
+) else if exist "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" (
+    start "" "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --app=http://localhost:5000 --window-size=1366,768
+) else (
+    start http://localhost:5000
+)
 
 echo =====================================================================
-echo  STATUS: Studio is ACTIVE and Running!
-echo  All customer and billing data is saved to ./data/
+echo  STATUS: Workshop Studio is ACTIVE and RUNNING!
+echo  URL: http://localhost:5000
+echo.
+echo  All 21,600+ Royal Enfield parts and billing data are saved to ./data/
 echo  (Minimize this window while using the software)
 echo =====================================================================
 echo.

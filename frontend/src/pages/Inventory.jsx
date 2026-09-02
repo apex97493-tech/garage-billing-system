@@ -177,7 +177,7 @@ export default function Inventory() {
           <div>
             <h1 className="text-xl font-bold text-slate-900 tracking-tight">Parts, Labor & Service Catalog</h1>
             <p className="text-xs text-slate-500">
-              {parts.length.toLocaleString()} total parts with genuine New MRP prices, service labor rates & stock
+              {parts.length.toLocaleString()} genuine parts and service labor rates
             </p>
           </div>
         </div>
@@ -204,13 +204,13 @@ export default function Inventory() {
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
         {/* Category Pills */}
-        <div className="flex items-center gap-1.5 flex-wrap pb-1 md:pb-0 overflow-x-auto max-w-full">
+        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 max-w-full scrollbar-thin">
           {categories.map(cat => {
             return (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border flex items-center space-x-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all shrink-0 border flex items-center space-x-1.5 ${
                   selectedCategory === cat
                     ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
                     : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -223,7 +223,7 @@ export default function Inventory() {
         </div>
 
         {/* Search Box */}
-        <div className="relative w-full md:w-72">
+        <div className="relative w-full md:w-72 shrink-0">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
@@ -269,7 +269,7 @@ export default function Inventory() {
                 <th className="p-3.5">Part / Description</th>
                 <th className="p-3.5">Category</th>
                 <th className="p-3.5">Type</th>
-                <th className="p-3.5 text-right">Price (New MRP)</th>
+                <th className="p-3.5 text-right">Price ({currency})</th>
                 <th className="p-3.5 text-right">Tax %</th>
                 <th className="p-3.5 text-center">Stock</th>
                 <th className="p-3.5 text-right">Actions</th>
