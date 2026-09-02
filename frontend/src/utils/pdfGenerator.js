@@ -89,16 +89,6 @@ export function downloadInvoicePDF(invoice, settings) {
   doc.text(`Date: ${invDate}`, 192, 31, { align: 'right' });
   doc.text(`Mode: ${invoice.paymentMethod || 'UPI'}`, 192, 36, { align: 'right' });
 
-  if (invoice.balanceDue > 0) {
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(180, 83, 9); // amber-700
-    doc.text(`Balance Due: ${currency} ${invoice.balanceDue}`, 192, 42, { align: 'right' });
-  } else {
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(21, 128, 61); // emerald-700
-    doc.text('Status: FULLY PAID', 192, 42, { align: 'right' });
-  }
-
   // Two Column Customer & Motorcycle Box
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(203, 213, 225);

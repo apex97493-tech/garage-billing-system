@@ -72,10 +72,19 @@ export async function generateInvoicePdfBuffer(invoice, settings) {
           }
 
           if (logoBuffer) {
-            // White circular/rounded container for logo
-            doc.roundedRect(46, headerY + 12, 54, 54, 6).fillAndStroke('#ffffff', '#e2e8f0');
-            doc.image(logoBuffer, 49, headerY + 15, { width: 48, height: 48, fit: [48, 48], align: 'center', valign: 'center' });
-            textLeft = 110;
+            const cx = 74;
+            const cy = headerY + 39;
+            const r = 26;
+
+            // Circular clipping mask for logo
+            doc.save();
+            doc.circle(cx, cy, r).clip();
+            doc.image(logoBuffer, cx - r, cy - r, { width: r * 2, height: r * 2, fit: [r * 2, r * 2], align: 'center', valign: 'center' });
+            doc.restore();
+
+            // Circular subtle border
+            doc.circle(cx, cy, r).lineWidth(1).stroke('#cbd5e1');
+            textLeft = 112;
             textMaxWidth = 250;
           }
         } catch (e) {
@@ -100,14 +109,9 @@ export async function generateInvoicePdfBuffer(invoice, settings) {
       doc.roundedRect(badgeX, headerY + 10, badgeWidth, 16, 3).fill(badgeBg);
       doc.fillColor('#ffffff').fontSize(7.5).font('Helvetica-Bold').text(billHeaderTitle, badgeX, headerY + 14, { width: badgeWidth, align: 'center' });
 
-      doc.fillColor('#0f172a').fontSize(9.5).font('Helvetica-Bold').text(invoiceNo, 370, headerY + 30, { align: 'right', width: 175 });
-      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(`Date: ${invDate}  |  Mode: ${invoice.paymentMethod || 'UPI'}`, 370, headerY + 44, { align: 'right', width: 175 });
-
-      if (invoice.balanceDue > 0) {
-        doc.fillColor('#9a3412').font('Helvetica-Bold').fontSize(8).text(`Balance Due: ${currency} ${invoice.balanceDue}`, 370, headerY + 57, { align: 'right', width: 175 });
-      } else {
-        doc.fillColor('#166534').font('Helvetica-Bold').fontSize(8).text('Status: FULLY PAID', 370, headerY + 57, { align: 'right', width: 175 });
-      }
+      doc.fillColor('#0f172a').fontSize(9.5).font('Helvetica-Bold').text(invoiceNo, 370, headerY + 32, { align: 'right', width: 175 });
+      doc.fillColor('#475569').fontSize(7.5).font('Helvetica').text(`Date: ${invDate}`, 370, headerY + 47, { align: 'right', width: 175 });
+      doc.text(`Mode: ${invoice.paymentMethod || 'UPI'}`, 370, headerY + 59, { align: 'right', width: 175 });
 
       // --- 2. Customer & Vehicle Box ---
       const infoBoxY = headerY + headerHeight + 8;

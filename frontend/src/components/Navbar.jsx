@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Wrench, Package, Settings, Calculator, 
-  HardDrive, Users, FileText, BellRing 
+  Users, FileText, BellRing 
 } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
@@ -11,10 +11,19 @@ const API_URL = 'http://localhost:5000/api';
 export default function Navbar() {
   const location = useLocation();
   const [dueCount, setDueCount] = useState(0);
+  const [shopInfo, setShopInfo] = useState({
+    shopName: 'Royal Enfield Workshop Studio',
+    tagline: 'Service, Spares & Billing Management',
+    logo: ''
+  });
 
   useEffect(() => {
     fetchDueCount();
-    const interval = setInterval(fetchDueCount, 15000);
+    fetchShopInfo();
+    const interval = setInterval(() => {
+      fetchDueCount();
+      fetchShopInfo();
+    }, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -22,6 +31,21 @@ export default function Navbar() {
     try {
       const res = await axios.get(`${API_URL}/reminders/due`);
       setDueCount((res.data || []).length);
+    } catch (err) {
+      // Backend starting
+    }
+  };
+
+  const fetchShopInfo = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/settings`);
+      if (res.data) {
+        setShopInfo({
+          shopName: res.data.shopName || 'Royal Enfield Workshop Studio',
+          tagline: res.data.tagline || 'Service, Spares & Billing Management',
+          logo: res.data.logo || ''
+        });
+      }
     } catch (err) {
       // Backend starting
     }
@@ -46,21 +70,31 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           
-          {/* Brand & Identity */}
+          {/* Brand & Identity with Round Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs">
-              <Wrench className="w-5 h-5 text-amber-400" />
-            </div>
+            {shopInfo.logo ? (
+              <div className="w-10 h-10 rounded-full border-2 border-slate-300 bg-white p-0.5 overflow-hidden flex items-center justify-center shadow-xs shrink-0">
+                <img 
+                  src={shopInfo.logo} 
+                  alt="Workshop Logo" 
+                  className="w-full h-full rounded-full object-cover" 
+                />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Wrench className="w-5 h-5 text-amber-400" />
+              </div>
+            )}
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-black text-base tracking-tight text-slate-900">
-                  Royal Enfield Workshop Studio
+                  {shopInfo.shopName}
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                   POS
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">Service, Spares & Billing Management</p>
+              <p className="text-xs text-slate-500 font-medium">{shopInfo.tagline}</p>
             </div>
           </Link>
 
@@ -73,15 +107,15 @@ export default function Navbar() {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors relative ${
-                    isActive
-                      ? 'bg-slate-900 text-white shadow-xs'
+                    isActive 
+                      ? 'bg-slate-900 text-white shadow-xs' 
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   {item.icon}
                   <span>{item.name}</span>
                   {item.badge && (
-                    <span className="ml-1.5 px-1.5 py-0.2 rounded-full text-[10px] bg-red-500 text-white font-bold animate-pulse">
+                    <span className="ml-1.5 px-1.5 py-0.2 bg-red-600 text-white text-[10px] font-black rounded-full shadow-2xs">
                       {item.badge}
                     </span>
                   )}
@@ -90,11 +124,12 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* USB Offline Status Badge */}
-          <div className="hidden xl:flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-850 text-xs font-bold">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <HardDrive className="w-3.5 h-3.5" />
-            <span>100% Offline</span>
+          {/* Offline/Online Status Indicator */}
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>100% Offline</span>
+            </div>
           </div>
 
         </div>

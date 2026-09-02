@@ -21,12 +21,12 @@
       "bikeModel": "Royal Enfield Continental GT 650",
       "regNo": "RJ14AB2134",
       "vinNo": "",
-      "visitCount": 6,
-      "totalSpent": 44585,
+      "visitCount": 7,
+      "totalSpent": 80612,
       "lastKm": 1223,
-      "lastVisited": "2026-09-02T06:36:00.821Z",
+      "lastVisited": "2026-09-02T06:42:50.350Z",
       "createdAt": "2026-09-01T10:36:24.639Z",
-      "updatedAt": "2026-09-02T06:36:00.821Z"
+      "updatedAt": "2026-09-02T06:42:50.350Z"
     },
     {
       "id": "cust_1788021926791_t612",
@@ -141,7 +141,7 @@
       "category": "Drivetrain",
       "basePrice": 1877,
       "gstRate": 18,
-      "stock": 50,
+      "stock": 47,
       "isLabour": false
     },
     {
@@ -216387,6 +216387,57 @@
   ],
   "invoices": [
     {
+      "id": "inv_1788331370408",
+      "_id": "inv_1788331370408",
+      "invoiceNo": "MOD-1008",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2027-03-02T06:42:50.141Z",
+      "items": [
+        {
+          "partId": "srv_3",
+          "partName": "Brake Fluid Flush & Hydraulic Bleed",
+          "qty": 2,
+          "unitPrice": 450,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_10",
+          "partName": "Full Custom Paint Job / Powder Coating",
+          "qty": 2,
+          "unitPrice": 12000,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "p_re_1",
+          "partName": "Chain and Sprocket Kit (KAA00059/A)",
+          "qty": 3,
+          "unitPrice": 1877,
+          "gstRate": 18,
+          "isLabour": false
+        }
+      ],
+      "subtotal": 30531,
+      "totalGst": 5495.58,
+      "discount": 0,
+      "grandTotal": 36027,
+      "advancePaid": 0,
+      "balanceDue": 36027,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-02T06:42:50.408Z"
+    },
+    {
       "id": "inv_1788330960903",
       "_id": "inv_1788330960903",
       "invoiceNo": "MOD-1007",
@@ -216660,7 +216711,7 @@
       "notes": "",
       "reminderSent": true,
       "createdAt": "2026-09-01T10:53:20.374Z",
-      "reminderSentAt": "2026-09-01T11:09:20.596Z",
+      "reminderSentAt": "2026-09-02T06:44:10.413Z",
       "billType": "Tax Invoice"
     },
     {

@@ -182,11 +182,13 @@ export default function PrintInvoice() {
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-5 mb-5">
           <div>
             {settings.logo && (
-              <img 
-                src={settings.logo} 
-                alt="Workshop Logo" 
-                className="h-14 w-auto max-w-[180px] object-contain mb-2 rounded" 
-              />
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 bg-white p-0.5 shadow-2xs mb-2.5">
+                <img 
+                  src={settings.logo} 
+                  alt="Workshop Logo" 
+                  className="w-full h-full rounded-full object-cover" 
+                />
+              </div>
             )}
             <h1 className="text-xl font-black tracking-tight text-slate-950 uppercase">
               {settings.shopName}
@@ -224,15 +226,6 @@ export default function PrintInvoice() {
             <p className="text-xs text-slate-600 mt-0.5">
               Mode: <span className="font-bold text-slate-900">{invoice.paymentMethod || 'UPI'}</span>
             </p>
-            {invoice.balanceDue > 0 ? (
-              <span className="inline-block mt-1.5 px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-300 rounded text-[11px] font-bold">
-                Balance Due: {currency}{invoice.balanceDue}
-              </span>
-            ) : (
-              <span className="inline-block mt-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded text-[11px] font-bold">
-                Fully Paid
-              </span>
-            )}
           </div>
         </div>
 
