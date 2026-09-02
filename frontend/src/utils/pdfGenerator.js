@@ -1,9 +1,50 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+function numberToWordsINR(amount) {
+  if (!amount || isNaN(amount)) return 'Zero Rupees Only';
+  const num = Math.floor(Number(amount));
+  if (num === 0) return 'Zero Rupees Only';
+
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 
+                'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  function convertTwoDigits(n) {
+    if (n < 20) return ones[n];
+    return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '');
+  }
+
+  function convertThreeDigits(n) {
+    let str = '';
+    if (Math.floor(n / 100) > 0) {
+      str += ones[Math.floor(n / 100)] + ' Hundred ';
+      n %= 100;
+    }
+    if (n > 0) {
+      str += convertTwoDigits(n);
+    }
+    return str.trim();
+  }
+
+  let words = '';
+  const crore = Math.floor(num / 10000000);
+  let remainder = num % 10000000;
+  const lakh = Math.floor(remainder / 100000);
+  remainder = remainder % 100000;
+  const thousand = Math.floor(remainder / 1000);
+  remainder = remainder % 1000;
+
+  if (crore > 0) words += convertThreeDigits(crore) + ' Crore ';
+  if (lakh > 0) words += convertThreeDigits(lakh) + ' Lakh ';
+  if (thousand > 0) words += convertThreeDigits(thousand) + ' Thousand ';
+  if (remainder > 0) words += convertThreeDigits(remainder) + ' ';
+
+  return words.trim() + ' Rupees Only';
+}
+
 /**
- * Generate and download a crisp, professional A4 Tax Invoice PDF
- * Supports custom multi-brand workshops, dynamic currency and tax labels.
+ * Generate and download dealership standard Indian GST / Workshop invoice PDF
  */
 export function downloadInvoicePDF(invoice, settings) {
   const doc = new jsPDF({
@@ -12,14 +53,16 @@ export function downloadInvoicePDF(invoice, settings) {
     format: 'a4'
   });
 
-  const shopName = (settings?.shopName || 'ROYAL ENFIELD WORKSHOP & SERVICE STUDIO').toUpperCase();
+  const shopName = (settings?.shopName || 'ROYAL ENFIELD WORKSHOP STUDIO').toUpperCase();
   const tagline = settings?.tagline || 'Motorcycle Service, Spares & Modifications';
-  const address = settings?.address || '';
+  const address = settings?.address || 'Industrial Area, Main Auto Market';
   const phone = settings?.contactNumber || '';
   const gstin = settings?.gstin || '';
+  const upiId = settings?.upiId || '';
+  const bankDetails = settings?.bankDetails || '';
   const rawCurrency = settings?.currency || 'Rs.';
   const currency = (rawCurrency === '₹' || rawCurrency.includes('₹')) ? 'Rs.' : rawCurrency;
-  const terms = settings?.terms || 'Goods once sold cannot be returned. Workmanship guaranteed for 30 days.';
+  const terms = settings?.terms || '1. Goods once sold cannot be returned.\n2. Workmanship guaranteed for 30 days.\n3. All replaced old parts must be claimed at delivery.';
 
   const billType = invoice.billType || 'Tax Invoice';
   const isGst = billType === 'Tax Invoice';
@@ -28,7 +71,7 @@ export function downloadInvoicePDF(invoice, settings) {
     : (billType === 'Estimate' ? 'ESTIMATE / QUOTATION' : 'TAX INVOICE');
 
   const cust = invoice.customer || {
-    name: invoice.customerName || 'Customer',
+    name: invoice.customerName || 'Valued Client',
     phone: invoice.customerPhone || '',
     bikeModel: invoice.bikeModel || '',
     regNo: invoice.regNo || ''
@@ -41,257 +84,298 @@ export function downloadInvoicePDF(invoice, settings) {
     year: 'numeric'
   });
 
-  // Header Background Bar (Subtle light slate)
-  doc.setFillColor(248, 250, 252);
-  doc.rect(14, 12, 182, 36, 'F');
-  doc.setDrawColor(226, 232, 240);
-  doc.rect(14, 12, 182, 36, 'S');
+  const pageWidth = 190;
+  const marginX = 10;
 
-  // Shop Name, Logo & Details
-  let textStartX = 18;
-  if (settings?.logo) {
-    try {
-      doc.addImage(settings.logo, 18, 15, 18, 18);
-      textStartX = 40;
-    } catch (e) {
-      textStartX = 18;
-    }
-  }
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42); // slate-900
-  doc.text(shopName, textStartX, 20);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(71, 85, 105); // slate-600
-  doc.text(tagline, textStartX, 25);
-
-  const maxAddrWidth = textStartX === 40 ? 88 : 110;
-  const addressLines = doc.splitTextToSize(`${address} | Phone: ${phone}` + (isGst && gstin ? ` | ${taxLabel} No: ${gstin}` : ''), maxAddrWidth);
-  doc.text(addressLines, textStartX, 30);
-
-  // Invoice Number & Status on Right
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(15, 23, 42);
-  doc.text(billHeaderTitle, 192, 20, { align: 'right' });
-
+  // --- Top Badge ---
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
-  doc.text(invoiceNo, 192, 26, { align: 'right' });
+  doc.text(billHeaderTitle, marginX, 10);
+
+  doc.setFontSize(7.5);
+  doc.setTextColor(71, 85, 105);
+  doc.rect(marginX + billHeaderTitle.length * 2.8 + 4, 6.5, 45, 5);
+  doc.text('ORIGINAL FOR RECIPIENT', marginX + billHeaderTitle.length * 2.8 + 6, 10);
+
+  // --- 1. Main Workshop & Invoice Box ---
+  const headerBoxY = 13;
+  const headerBoxH = 30;
+  doc.setDrawColor(15, 23, 42);
+  doc.setLineWidth(0.3);
+  doc.rect(marginX, headerBoxY, pageWidth, headerBoxH);
+
+  // Split Divider
+  const splitX = 125;
+  doc.line(splitX, headerBoxY, splitX, headerBoxY + headerBoxH);
+
+  // Logo & Shop Text
+  let textLeft = marginX + 4;
+  let textWidth = splitX - marginX - 6;
+
+  if (settings?.logo) {
+    try {
+      doc.addImage(settings.logo, marginX + 3, headerBoxY + 4, 20, 20);
+      textLeft = marginX + 26;
+      textWidth = splitX - textLeft - 4;
+    } catch (e) {}
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(shopName, textLeft, headerBoxY + 6, { maxWidth: textWidth });
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(71, 85, 105);
-  doc.text(`Date: ${invDate}`, 192, 31, { align: 'right' });
-  doc.text(`Mode: ${invoice.paymentMethod || 'UPI'}`, 192, 36, { align: 'right' });
+  doc.text(tagline, textLeft, headerBoxY + 11, { maxWidth: textWidth });
 
-  // Two Column Customer & Motorcycle Box
-  doc.setFillColor(255, 255, 255);
-  doc.setDrawColor(203, 213, 225);
-  doc.roundedRect(14, 52, 182, 26, 2, 2, 'S');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 116, 139);
+  doc.text(address, textLeft, headerBoxY + 16, { maxWidth: textWidth });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`Mobile: ${phone}` + (isGst && gstin ? `   GSTIN: ${gstin}` : ''), textLeft, headerBoxY + 25, { maxWidth: textWidth });
+
+  // Invoice Details (Right)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Invoice No.', splitX + 4, headerBoxY + 6);
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text(invoiceNo, splitX + 4, headerBoxY + 11);
+
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Invoice Date', splitX + 36, headerBoxY + 6);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(15, 23, 42);
+  doc.text(invDate, splitX + 36, headerBoxY + 11);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.text('Payment Mode:', splitX + 4, headerBoxY + 22);
+  doc.text(invoice.paymentMethod || 'UPI', splitX + 28, headerBoxY + 22);
+
+  // --- 2. Customer & Vehicle Box (BILL TO) ---
+  const billToY = headerBoxY + headerBoxH + 2;
+  const billToH = 18;
+  doc.rect(marginX, billToY, pageWidth, billToH);
+  doc.line(splitX, billToY, splitX, billToY + billToH);
+
+  // Strip Header
+  doc.setFillColor(241, 245, 249);
+  doc.rect(marginX, billToY, pageWidth, 5, 'F');
+  doc.line(marginX, billToY + 5, marginX + pageWidth, billToY + 5);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(15, 23, 42);
+  doc.text('BILL TO / CUSTOMER DETAILS', marginX + 3, billToY + 3.5);
+  doc.text('VEHICLE & SERVICE SPECS', splitX + 4, billToY + 3.5);
 
   // Customer Details (Left)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
-  doc.text('CUSTOMER DETAILS', 18, 58);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text(cust.name, 18, 64);
-
+  doc.text(cust.name, marginX + 3, billToY + 9.5);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text(`Phone: ${cust.phone}`, 18, 70);
+  doc.setFontSize(7.5);
+  doc.text(`Mobile: ${cust.phone || 'N/A'}`, marginX + 3, billToY + 14);
 
   // Vehicle Details (Right)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
-  doc.text('MOTORCYCLE & SERVICE SPECS', 110, 58);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text(cust.bikeModel, 110, 64);
-
+  doc.text(cust.bikeModel, splitX + 4, billToY + 9.5);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(51, 65, 85);
-  doc.text(`Reg No: ${cust.regNo || 'Bespoke'}`, 110, 70);
-  if (invoice.currentKm > 0) {
-    doc.text(`Kilometre: ${invoice.currentKm} KM`, 110, 75);
-  }
+  doc.setFontSize(7.5);
+  doc.text(`Reg No: ${cust.regNo || 'Bespoke'}` + (invoice.currentKm > 0 ? `   |   ${invoice.currentKm} KM` : ''), splitX + 4, billToY + 14);
 
-  // Items Table
+  // --- 3. Items Table using AutoTable ---
   const tableHeaders = isGst 
-    ? ['#', 'Description of Parts & Services', 'Qty', `Rate (${currency})`, `${taxLabel} %`, `Total (${currency})`]
-    : ['#', 'Description of Parts & Services', 'Qty', `Rate (${currency})`, `Total (${currency})`];
+    ? [['S.NO.', 'ITEMS / DESCRIPTION OF WORK', 'QTY.', `RATE (${currency})`, 'TAX %', `AMOUNT (${currency})`]]
+    : [['S.NO.', 'ITEMS / DESCRIPTION OF WORK', 'QTY.', `RATE (${currency})`, `AMOUNT (${currency})`]];
 
-  const tableData = (invoice.items || []).map((item, idx) => {
-    const lineBase = (item.qty || 1) * (item.unitPrice || 0);
-    const lineGst = isGst ? lineBase * ((item.gstRate || 0) / 100) : 0;
+  let totalQty = 0;
+  const tableRows = (invoice.items || []).map((item, idx) => {
+    const q = Number(item.qty) || 1;
+    totalQty += q;
+    const lineBase = q * (Number(item.unitPrice) || 0);
+    const lineGst = isGst ? lineBase * ((Number(item.gstRate) || 0) / 100) : 0;
     const lineTotal = lineBase + lineGst;
-    
+
     if (isGst) {
       return [
         idx + 1,
-        item.partName + (item.isLabour ? ' (Labor/Service)' : ''),
-        item.qty || 1,
-        `${currency} ${(item.unitPrice || 0).toFixed(2)}`,
+        item.partName + (item.isLabour ? ' (Labor)' : ''),
+        q,
+        (Number(item.unitPrice) || 0).toFixed(2),
         `${item.gstRate || 0}%`,
-        `${currency} ${lineTotal.toFixed(2)}`
-      ];
-    } else {
-      return [
-        idx + 1,
-        item.partName + (item.isLabour ? ' (Labor/Service)' : ''),
-        item.qty || 1,
-        `${currency} ${(item.unitPrice || 0).toFixed(2)}`,
-        `${currency} ${lineTotal.toFixed(2)}`
+        lineTotal.toFixed(2)
       ];
     }
+    return [
+      idx + 1,
+      item.partName + (item.isLabour ? ' (Labor)' : ''),
+      q,
+      (Number(item.unitPrice) || 0).toFixed(2),
+      lineTotal.toFixed(2)
+    ];
   });
+
+  const receivedAmt = invoice.advancePaid > 0 ? invoice.advancePaid : (invoice.balanceDue === 0 ? invoice.grandTotal : 0);
+
+  // Summary Rows
+  if (isGst) {
+    tableRows.push([
+      { content: 'TOTAL', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: String(totalQty), styles: { halign: 'center', fontStyle: 'bold' } },
+      '',
+      { content: `${currency} ${(invoice.totalGst || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: `${currency} ${(invoice.grandTotal || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]);
+    tableRows.push([
+      { content: 'RECEIVED AMOUNT', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: `${currency} ${(Number(receivedAmt) || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]);
+    if (invoice.balanceDue > 0) {
+      tableRows.push([
+        { content: 'CURRENT BALANCE DUE', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', textColor: [154, 52, 18] } },
+        { content: `${currency} ${(Number(invoice.balanceDue) || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [154, 52, 18] } }
+      ]);
+    }
+  } else {
+    tableRows.push([
+      { content: 'TOTAL', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: String(totalQty), styles: { halign: 'center', fontStyle: 'bold' } },
+      '',
+      { content: `${currency} ${(invoice.grandTotal || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]);
+    tableRows.push([
+      { content: 'RECEIVED AMOUNT', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: `${currency} ${(Number(receivedAmt) || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold' } }
+    ]);
+    if (invoice.balanceDue > 0) {
+      tableRows.push([
+        { content: 'CURRENT BALANCE DUE', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold', textColor: [154, 52, 18] } },
+        { content: `${currency} ${(Number(invoice.balanceDue) || 0).toFixed(2)}`, styles: { halign: 'right', fontStyle: 'bold', textColor: [154, 52, 18] } }
+      ]);
+    }
+  }
 
   autoTable(doc, {
-    startY: 82,
-    head: [tableHeaders],
-    body: tableData,
+    startY: billToY + billToH + 2,
+    margin: { left: marginX, right: marginX },
+    head: tableHeaders,
+    body: tableRows,
     theme: 'grid',
-    headStyles: {
-      fillColor: [15, 23, 42],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      fontSize: 8.5,
-      halign: 'left',
-      cellPadding: 2.5
-    },
     styles: {
-      fontSize: 8,
-      cellPadding: 2.5,
+      fontSize: 7.5,
       textColor: [15, 23, 42],
-      lineColor: [226, 232, 240],
-      lineWidth: 0.2
+      lineColor: [15, 23, 42],
+      lineWidth: 0.25,
+      cellPadding: 1.5
+    },
+    headStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      halign: 'center'
     },
     columnStyles: isGst ? {
-      0: { halign: 'center', cellWidth: 10 },
-      1: { cellWidth: 80 },
-      2: { halign: 'center', cellWidth: 16 },
-      3: { halign: 'right', cellWidth: 26 },
-      4: { halign: 'right', cellWidth: 22 },
-      5: { halign: 'right', cellWidth: 28, fontStyle: 'bold' }
+      0: { cellWidth: 12, halign: 'center' },
+      1: { cellWidth: 'auto', halign: 'left' },
+      2: { cellWidth: 15, halign: 'center' },
+      3: { cellWidth: 22, halign: 'right' },
+      4: { cellWidth: 18, halign: 'center' },
+      5: { cellWidth: 26, halign: 'right' }
     } : {
-      0: { halign: 'center', cellWidth: 10 },
-      1: { cellWidth: 95 },
-      2: { halign: 'center', cellWidth: 20 },
-      3: { halign: 'right', cellWidth: 28 },
-      4: { halign: 'right', cellWidth: 29, fontStyle: 'bold' }
+      0: { cellWidth: 12, halign: 'center' },
+      1: { cellWidth: 'auto', halign: 'left' },
+      2: { cellWidth: 15, halign: 'center' },
+      3: { cellWidth: 25, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' }
     }
   });
 
-  const finalY = (doc).lastAutoTable.finalY || 150;
+  let curFinalY = doc.lastAutoTable.finalY + 2;
 
-  // Financial Breakdown Block (Right)
-  const calcBoxX = 120;
-  let calcBoxY = finalY + 6;
-
-  doc.setFillColor(248, 250, 252);
-  doc.rect(calcBoxX, calcBoxY, 76, 42, 'F');
-  doc.setDrawColor(203, 213, 225);
-  doc.rect(calcBoxX, calcBoxY, 76, 42, 'S');
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(71, 85, 105);
-
-  doc.text('Subtotal:', calcBoxX + 4, calcBoxY + 7);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text(`${currency} ${(invoice.subtotal || 0).toFixed(2)}`, calcBoxX + 72, calcBoxY + 7, { align: 'right' });
-
-  let offset = 14;
+  // --- 4. CGST / SGST Tax Breakdown Table (Only for Tax Invoice) ---
   if (isGst && invoice.totalGst > 0) {
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(71, 85, 105);
-    doc.text(`Total ${taxLabel}:`, calcBoxX + 4, calcBoxY + offset);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(15, 23, 42);
-    doc.text(`${currency} ${(invoice.totalGst || 0).toFixed(2)}`, calcBoxX + 72, calcBoxY + offset, { align: 'right' });
-    offset += 7;
+    const halfGst = (Number(invoice.totalGst) || 0) / 2;
+    autoTable(doc, {
+      startY: curFinalY,
+      margin: { left: marginX, right: marginX },
+      head: [['Taxable Value', 'CGST (Rate % / Amount)', 'SGST (Rate % / Amount)', 'Total Tax Amount']],
+      body: [[
+        `${currency} ${(invoice.subtotal || 0).toFixed(2)}`,
+        `9% (${currency} ${halfGst.toFixed(2)})`,
+        `9% (${currency} ${halfGst.toFixed(2)})`,
+        `${currency} ${(invoice.totalGst || 0).toFixed(2)}`
+      ]],
+      theme: 'grid',
+      styles: {
+        fontSize: 7,
+        textColor: [15, 23, 42],
+        lineColor: [15, 23, 42],
+        lineWidth: 0.25,
+        halign: 'center',
+        cellPadding: 1.5
+      },
+      headStyles: {
+        fillColor: [241, 245, 249],
+        textColor: [15, 23, 42],
+        fontStyle: 'bold'
+      }
+    });
+    curFinalY = doc.lastAutoTable.finalY + 2;
   }
 
-  // Grand Total Line
-  doc.setDrawColor(203, 213, 225);
-  doc.line(calcBoxX + 2, calcBoxY + offset, calcBoxX + 74, calcBoxY + offset);
-  offset += 5;
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text('Grand Total:', calcBoxX + 4, calcBoxY + offset);
-  doc.text(`${currency} ${invoice.grandTotal || 0}`, calcBoxX + 72, calcBoxY + offset, { align: 'right' });
-
-  if (invoice.advancePaid > 0) {
-    offset += 6;
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(21, 128, 61);
-    doc.text('Advance Paid:', calcBoxX + 4, calcBoxY + offset);
-    doc.text(`- ${currency} ${invoice.advancePaid}`, calcBoxX + 72, calcBoxY + offset, { align: 'right' });
-
-    offset += 5;
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(180, 83, 9);
-    doc.text('Balance Due:', calcBoxX + 4, calcBoxY + offset);
-    doc.text(`${currency} ${invoice.balanceDue || 0}`, calcBoxX + 72, calcBoxY + offset, { align: 'right' });
-  }
-
-  // Terms & Conditions and Bank Details (Left)
-  const termsX = 14;
-  const termsY = finalY + 6;
-
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(15, 23, 42);
-  doc.text('TERMS & CONDITIONS', termsX, termsY + 6);
-
+  // --- 5. Total Amount (in words) ---
+  doc.rect(marginX, curFinalY, pageWidth, 9);
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Total Amount (in words)', marginX + 3, curFinalY + 3);
+
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(numberToWordsINR(invoice.grandTotal), marginX + 3, curFinalY + 7);
+
+  curFinalY += 11;
+
+  // --- 6. Bank Details, Terms, UPI & Signatory ---
+  const bottomH = 26;
+  doc.rect(marginX, curFinalY, pageWidth, bottomH);
+  doc.line(splitX, curFinalY, splitX, curFinalY + bottomH);
+
+  // Left: Bank & Terms
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.text('Terms & Conditions:', marginX + 3, curFinalY + 4);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6);
   doc.setTextColor(71, 85, 105);
-  const splitTerms = doc.splitTextToSize(terms, 95);
-  doc.text(splitTerms, termsX, termsY + 11);
+  doc.text(terms, marginX + 3, curFinalY + 8, { maxWidth: splitX - marginX - 6 });
 
-  if (bankDetails) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(`Bank Account: ${bankDetails}`, termsX, termsY + 28);
-  }
-
+  // Right: UPI & Signatory
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(15, 23, 42);
   if (upiId) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(15, 23, 42);
-    doc.text(`UPI Payment: ${upiId}`, termsX, termsY + 34);
+    doc.text(`Instant UPI Payment ID: ${upiId}`, splitX + 4, curFinalY + 4);
   }
 
-  // Bottom Footer
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(148, 163, 184);
-  doc.text(
-    `This is a computer-generated ${billHeaderTitle.toLowerCase()}. Authorized signature required.`,
-    105,
-    285,
-    { align: 'center' }
-  );
+  doc.line(splitX + 10, curFinalY + bottomH - 6, marginX + pageWidth - 10, curFinalY + bottomH - 6);
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Authorized Signatory / Workshop Manager', splitX + 10, curFinalY + bottomH - 2, { align: 'center', maxWidth: pageWidth - splitX });
 
-  const cleanFilename = `${(invoice.customer?.name || 'Customer').replace(/[^a-zA-Z0-9]/g, '_')}_${invoiceNo.replace('#', '')}.pdf`;
-  doc.save(cleanFilename);
+  // Save PDF
+  doc.save(`${billHeaderTitle.replace(/\s+/g, '_')}_${invoiceNo}.pdf`);
 }

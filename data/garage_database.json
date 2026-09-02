@@ -21,12 +21,12 @@
       "bikeModel": "Royal Enfield Continental GT 650",
       "regNo": "RJ14AB2134",
       "vinNo": "",
-      "visitCount": 7,
-      "totalSpent": 80612,
+      "visitCount": 8,
+      "totalSpent": 87633,
       "lastKm": 1223,
-      "lastVisited": "2026-09-02T06:42:50.350Z",
+      "lastVisited": "2026-09-02T06:58:56.268Z",
       "createdAt": "2026-09-01T10:36:24.639Z",
-      "updatedAt": "2026-09-02T06:42:50.350Z"
+      "updatedAt": "2026-09-02T06:58:56.268Z"
     },
     {
       "id": "cust_1788021926791_t612",
@@ -216386,6 +216386,41 @@
     }
   ],
   "invoices": [
+    {
+      "id": "inv_1788332336340",
+      "_id": "inv_1788332336340",
+      "invoiceNo": "MOD-1009",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2027-03-02T06:58:56.040Z",
+      "items": [
+        {
+          "partId": "srv_4",
+          "partName": "Front Fork Oil & Seals Replacement Labor",
+          "qty": 7,
+          "unitPrice": 850,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 5950,
+      "totalGst": 1071,
+      "discount": 0,
+      "grandTotal": 7021,
+      "advancePaid": 0,
+      "balanceDue": 7021,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-02T06:58:56.340Z"
+    },
     {
       "id": "inv_1788331370408",
       "_id": "inv_1788331370408",
