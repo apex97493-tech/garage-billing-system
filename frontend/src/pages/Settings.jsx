@@ -2,9 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   Save, HardDrive, Download, Upload, CheckCircle2, 
-  RotateCcw, AlertTriangle, Building2, 
-  Smartphone, QrCode, ShieldCheck, RefreshCw, Unlink,
-  Image as ImageIcon, Trash2
+  Building2, Smartphone, QrCode, ShieldCheck, Unlink,
+  Image as ImageIcon, Trash2, RefreshCw
 } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
@@ -30,6 +29,7 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [restoreStatus, setRestoreStatus] = useState('');
   const [dbStats, setDbStats] = useState({ customers: 0, invoices: 0, parts: 0 });
+  const [disconnecting, setDisconnecting] = useState(false);
   const fileInputRef = useRef(null);
 
   // WhatsApp Free Bot State
@@ -95,12 +95,25 @@ export default function Settings() {
   };
 
   const handleDisconnectWhatsapp = async () => {
-    if (window.confirm('Disconnect your workshop WhatsApp session?')) {
+    if (window.confirm('Are you sure you want to disconnect this WhatsApp number?')) {
+      setDisconnecting(true);
       try {
+        setWhatsappStatus({
+          isConnected: false,
+          isConnecting: false,
+          connectedPhone: null,
+          hasQR: false,
+          qrCodeDataUrl: null
+        });
         await axios.post(`${API_URL}/whatsapp/disconnect`);
-        fetchWhatsappStatus();
+        setTimeout(() => {
+          fetchWhatsappStatus();
+          setDisconnecting(false);
+        }, 800);
       } catch (err) {
         console.error('Error disconnecting WhatsApp:', err);
+        setDisconnecting(false);
+        alert('Failed to disconnect WhatsApp.');
       }
     }
   };
@@ -173,6 +186,15 @@ export default function Settings() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const formatDisplayPhone = (p) => {
+    if (!p) return '';
+    const clean = p.replace(/[^0-9]/g, '');
+    if (clean.length === 12 && clean.startsWith('91')) {
+      return `+91 ${clean.slice(2, 7)} ${clean.slice(7)}`;
+    }
+    return `+${clean}`;
   };
 
   return (
@@ -277,7 +299,7 @@ export default function Settings() {
                   className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                   value={settings.tagline}
                   onChange={e => setSettings({ ...settings, tagline: e.target.value })}
-                  placeholder="e.g. Genuine Spares, Periodic Service & Modifications"
+                  placeholder="e.g. Genuine Spares, Periodic Service & Maintenance"
                 />
               </div>
 
@@ -427,41 +449,43 @@ export default function Settings() {
         {/* Right Column: Free WhatsApp Pairing & Data Backup */}
         <div className="space-y-4">
           
-          {/* 100% Free WhatsApp Link Card */}
+          {/* Professional WhatsApp Service Integration Card */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
                 <Smartphone className="w-4 h-4 text-emerald-600" />
-                <span>100% Free WhatsApp Bot</span>
+                <span>WhatsApp Messaging Service</span>
               </div>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                 whatsappStatus.isConnected 
                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
                   : 'bg-slate-100 text-slate-600'
               }`}>
-                {whatsappStatus.isConnected ? '🟢 Linked' : '⚪ Offline'}
+                {whatsappStatus.isConnected ? '🟢 Connected' : '⚪ Disconnected'}
               </span>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Link your workshop phone once. All bills and service reminders send automatically from your WhatsApp at <strong>₹0 cost</strong>.
+              Connect your workshop's WhatsApp number to automatically dispatch PDF bills and periodic service reminders to your customers.
             </p>
 
             {whatsappStatus.isConnected ? (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2 text-xs">
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2.5 text-xs">
                 <div className="flex items-center text-emerald-900 font-bold">
-                  <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-600" />
-                  Connected Number: {whatsappStatus.connectedPhone || 'Linked Device'}
+                  <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-600 shrink-0" />
+                  <span>Linked Phone: {formatDisplayPhone(whatsappStatus.connectedPhone) || 'Workshop Device'}</span>
                 </div>
-                <p className="text-[11px] text-emerald-800 font-medium">
-                  Automated background bill dispatch and daily service reminders are active.
+                <p className="text-[11px] text-emerald-800 font-medium leading-normal">
+                  Automatic invoice document delivery and service maintenance reminders are active.
                 </p>
                 <button
+                  type="button"
+                  disabled={disconnecting}
                   onClick={handleDisconnectWhatsapp}
-                  className="w-full py-1.5 px-3 bg-white text-red-700 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-bold transition-colors flex items-center justify-center shadow-2xs"
+                  className="w-full py-2 px-3 bg-white text-red-700 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-bold transition-colors flex items-center justify-center shadow-2xs disabled:opacity-50"
                 >
-                  <Unlink className="w-3.5 h-3.5 mr-1" />
-                  Unlink WhatsApp
+                  <Unlink className="w-3.5 h-3.5 mr-1.5" />
+                  {disconnecting ? 'Disconnecting Number...' : 'Disconnect Number'}
                 </button>
               </div>
             ) : (
@@ -469,7 +493,7 @@ export default function Settings() {
                 {whatsappStatus.qrCodeDataUrl ? (
                   <div className="text-center p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                     <p className="text-[11px] font-bold text-slate-800">
-                      Open WhatsApp on Phone → Linked Devices → Scan this QR:
+                      Open WhatsApp on Phone → Linked Devices → Scan this QR Code:
                     </p>
                     <img 
                       src={whatsappStatus.qrCodeDataUrl} 
@@ -477,16 +501,17 @@ export default function Settings() {
                       className="w-44 h-44 mx-auto rounded-lg border border-slate-300 bg-white p-1 shadow-xs"
                     />
                     <p className="text-[10px] text-slate-500 font-medium">
-                      QR refreshes automatically. Scan once to pair forever.
+                      Point your phone camera to pair your workshop number.
                     </p>
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleConnectWhatsapp}
                     className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center transition-colors shadow-xs"
                   >
                     <QrCode className="w-4 h-4 mr-1.5" />
-                    Show WhatsApp Pairing QR
+                    Link WhatsApp Number
                   </button>
                 )}
               </div>

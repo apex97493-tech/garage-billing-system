@@ -29,13 +29,14 @@ class WhatsAppLocalBot {
       const { default: pino } = await import('pino');
 
       this.isConnecting = true;
+      this.retryCount = 0;
       const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
 
       this.sock = makeWASocket({
         auth: state,
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: ['Workshop POS Studio', 'Chrome', '1.0.0']
+        browser: ['Royal Enfield Workshop Studio', 'Chrome', '1.0.0']
       });
 
       this.sock.ev.on('creds.update', saveCreds);
@@ -63,11 +64,11 @@ class WhatsAppLocalBot {
           this.isConnected = false;
           this.isConnecting = false;
           const statusCode = lastDisconnect?.error?.output?.statusCode;
-          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut && this.retryCount < 5;
 
           console.log(`[WhatsApp] Connection closed. Reason code: ${statusCode}. Reconnecting: ${shouldReconnect}`);
 
-          if (shouldReconnect && this.retryCount < 5) {
+          if (shouldReconnect) {
             this.retryCount++;
             setTimeout(() => this.init(), 3000);
           } else if (statusCode === DisconnectReason.loggedOut) {
@@ -95,17 +96,30 @@ class WhatsAppLocalBot {
     try {
       this.isConnected = false;
       this.isConnecting = false;
-      this.qrCodeDataUrl = null;
       this.connectedPhone = null;
+      this.qrCodeDataUrl = null;
+      this.qrRaw = null;
+      this.retryCount = 999; // Stop retry loops
 
       if (this.sock) {
-        await this.sock.logout().catch(() => {});
+        try {
+          this.sock.ev.removeAllListeners('connection.update');
+          this.sock.ev.removeAllListeners('creds.update');
+          await this.sock.logout().catch(() => {});
+          this.sock.end();
+        } catch (e) {}
         this.sock = null;
       }
 
       if (fs.existsSync(SESSION_DIR)) {
-        fs.rmSync(SESSION_DIR, { recursive: true, force: true });
-        fs.mkdirSync(SESSION_DIR, { recursive: true });
+        try {
+          const files = fs.readdirSync(SESSION_DIR);
+          for (const f of files) {
+            try {
+              fs.rmSync(path.join(SESSION_DIR, f), { recursive: true, force: true });
+            } catch (e) {}
+          }
+        } catch (e) {}
       }
 
       console.log('[WhatsApp] Disconnected and session cleared.');
