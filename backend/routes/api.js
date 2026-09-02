@@ -264,21 +264,28 @@ router.post('/invoices', async (req, res) => {
 
     // Auto-send PDF bill via WhatsApp if bot is connected and setting enabled
     const settings = db.getSettings();
-    if (settings.autoSendBillWhatsapp !== false && whatsappBot.isConnected && customerData.phone) {
+    if (settings.autoSendBillWhatsapp !== false && customerData.phone) {
       const currency = settings.currency || '₹';
       const invoiceNo = invoice.invoiceNo;
-      const fileName = `Tax_Invoice_${invoiceNo}.pdf`;
-      const caption = `🧾 *TAX INVOICE — ${(settings.shopName || 'WORKSHOP').toUpperCase()}*\n` +
-        `Invoice: #${invoiceNo} | Date: ${new Date().toLocaleDateString('en-IN')}\n` +
+      const bType = invoice.billType || 'Tax Invoice';
+      const bTitle = bType === 'Pre-Invoice' ? 'PRE-INVOICE' : (bType === 'Estimate' ? 'ESTIMATE / QUOTATION' : 'TAX INVOICE');
+      const filePrefix = bType === 'Pre-Invoice' ? 'Pre_Invoice' : (bType === 'Estimate' ? 'Estimate' : 'Tax_Invoice');
+      const fileName = `${filePrefix}_${invoiceNo}.pdf`;
+      const caption = `📄 *${bTitle} — ${(settings.shopName || 'ROYAL ENFIELD WORKSHOP').toUpperCase()}*\n` +
+        `Bill No: #${invoiceNo} | Date: ${new Date().toLocaleDateString('en-IN')}\n` +
         `Customer: ${customerData.name}\n` +
-        `Motorcycle: ${customerData.bikeModel} (${customerData.regNo || 'Bespoke'})\n` +
+        `Motorcycle: ${customerData.bikeModel} (Reg No: ${customerData.regNo || 'Bespoke'})\n` +
         `Total Amount: ${currency}${invoice.grandTotal}` +
         (invoice.balanceDue > 0 ? ` | Balance Due: ${currency}${invoice.balanceDue}` : ' | Status: FULLY PAID') +
-        `\n\n_Please find attached your official Tax Invoice PDF. Thank you for visiting ${settings.shopName}!_`;
+        `\n\n_Please find attached your official ${bTitle.toLowerCase()} document. Thank you for choosing ${(settings.shopName || 'our workshop')}!_`;
 
-      generateInvoicePdfBuffer(invoice, settings)
-        .then(pdfBuffer => whatsappBot.sendDocument(customerData.phone, pdfBuffer, fileName, caption))
-        .catch(err => console.error('[WhatsApp Auto-Send PDF Error]:', err.message));
+      if (whatsappBot.isConnected) {
+        generateInvoicePdfBuffer(invoice, settings)
+          .then(pdfBuffer => whatsappBot.sendDocument(customerData.phone, pdfBuffer, fileName, caption))
+          .catch(err => console.error('[WhatsApp Auto-Send PDF Error]:', err.message));
+      } else {
+        console.log(`[WhatsApp Auto-Send]: WhatsApp bot offline. Pair phone in Settings to enable automatic delivery to ${customerData.phone}.`);
+      }
     }
 
     res.status(201).json(invoice);

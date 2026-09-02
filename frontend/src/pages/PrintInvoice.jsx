@@ -252,13 +252,8 @@ export default function PrintInvoice() {
             </h3>
             <p className="text-xs font-black text-slate-950">{cust.bikeModel}</p>
             <p className="text-slate-600 mt-0.5 font-medium">
-              Reg / Chassis: <span className="font-mono font-bold uppercase text-slate-950">{cust.regNo || 'Bespoke / No Reg'}</span>
+              Reg No: <span className="font-mono font-bold uppercase text-slate-950">{cust.regNo || 'Bespoke / No Reg'}</span>
             </p>
-            {invoice.buildType && (
-              <p className="text-slate-600 mt-0.5 font-medium">
-                Job Type: <span className="font-bold text-slate-900">{invoice.buildType}</span>
-              </p>
-            )}
             {invoice.currentKm > 0 && (
               <p className="text-slate-600 mt-0.5 font-medium">
                 Kilometre: <span className="font-mono font-bold text-slate-900">{invoice.currentKm} KM</span>

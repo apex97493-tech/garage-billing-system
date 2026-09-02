@@ -458,14 +458,14 @@ export default function POS() {
             </datalist>
           </div>
 
-          {/* Reg / Chassis */}
+          {/* Reg No */}
           <div className="relative">
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Reg / Chassis Number
+              Registration Number (Reg No.)
             </label>
             <input
               type="text"
-              placeholder="e.g. DL-01-AB-1234"
+              placeholder="e.g. RJ-14-AB-2134"
               value={customer.regNo}
               onChange={(e) =>
                 handleCustomerSearch("regNo", e.target.value.toUpperCase())

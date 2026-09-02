@@ -79,7 +79,7 @@ export async function generateInvoicePdfBuffer(invoice, settings) {
       // Vehicle Info
       doc.fillColor('#64748b').fontSize(7.5).font('Helvetica-Bold').text('MOTORCYCLE & SERVICE SPECS', 300, 128);
       doc.fillColor('#0f172a').fontSize(9.5).font('Helvetica-Bold').text(cust.bikeModel, 300, 140);
-      doc.fillColor('#334155').fontSize(8.5).font('Helvetica').text(`Reg / Chassis: ${cust.regNo || 'Bespoke'}` + (invoice.buildType ? `  |  Job: ${invoice.buildType}` : ''), 300, 154);
+      doc.fillColor('#334155').fontSize(8.5).font('Helvetica').text(`Reg No: ${cust.regNo || 'Bespoke'}`, 300, 154);
       if (invoice.currentKm > 0) {
         doc.text(`Kilometre: ${invoice.currentKm} KM`, 300, 164);
       }

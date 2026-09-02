@@ -136,7 +136,7 @@ export function downloadInvoicePDF(invoice, settings) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(51, 65, 85);
-  doc.text(`Reg / Chassis: ${cust.regNo || 'Bespoke'}` + (invoice.buildType ? `  |  Job: ${invoice.buildType}` : ''), 110, 70);
+  doc.text(`Reg No: ${cust.regNo || 'Bespoke'}`, 110, 70);
   if (invoice.currentKm > 0) {
     doc.text(`Kilometre: ${invoice.currentKm} KM`, 110, 75);
   }
