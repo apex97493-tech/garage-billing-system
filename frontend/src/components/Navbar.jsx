@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Wrench, Package, Settings, Calculator, 
-  ClipboardList, HardDrive, Users, FileText, BellRing 
+  HardDrive, Users, FileText, BellRing 
 } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
@@ -37,9 +37,8 @@ export default function Navbar() {
       badge: dueCount > 0 ? dueCount : null 
     },
     { name: 'Customers & CRM', path: '/customers', icon: <Users className="w-4 h-4 mr-1.5" /> },
-    { name: 'Job Cards & Builds', path: '/job-cards', icon: <ClipboardList className="w-4 h-4 mr-1.5" /> },
     { name: 'Parts & Rates', path: '/inventory', icon: <Package className="w-4 h-4 mr-1.5" /> },
-    { name: 'Settings & Automation', path: '/settings', icon: <Settings className="w-4 h-4 mr-1.5" /> },
+    { name: 'Settings & WhatsApp', path: '/settings', icon: <Settings className="w-4 h-4 mr-1.5" /> },
   ];
 
   return (
@@ -50,18 +49,18 @@ export default function Navbar() {
           {/* Brand & Identity */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs">
-              <Wrench className="w-5 h-5 text-orange-400" />
+              <Wrench className="w-5 h-5 text-amber-400" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-black text-base tracking-tight text-slate-900">
-                  Custom Garage & Workshop
+                  Royal Enfield Workshop Studio
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
                   POS
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">Motorcycle Modifications & Billing</p>
+              <p className="text-xs text-slate-500 font-medium">Service, Spares & Billing Management</p>
             </div>
           </Link>
 

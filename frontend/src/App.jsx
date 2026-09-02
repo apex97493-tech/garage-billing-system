@@ -1,7 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import POS from './pages/POS';
-import JobCards from './pages/JobCards';
 import Inventory from './pages/Inventory';
 import PrintInvoice from './pages/PrintInvoice';
 import Settings from './pages/Settings';
@@ -19,7 +18,6 @@ function App() {
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/reminders" element={<ServiceReminders />} />
           <Route path="/customers" element={<Customers />} />
-          <Route path="/job-cards" element={<JobCards />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/print/:id" element={<PrintInvoice />} />
           <Route path="/settings" element={<Settings />} />

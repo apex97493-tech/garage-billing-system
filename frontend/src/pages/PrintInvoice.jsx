@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Printer, ArrowLeft, MessageSquare, Download, CheckCircle2 } from 'lucide-react';
+import { 
+  Printer, ArrowLeft, Download, MessageSquare, 
+  CheckCircle2, AlertCircle, FileText 
+} from 'lucide-react';
 import { downloadInvoicePDF } from '../utils/pdfGenerator';
 
 const API_URL = 'http://localhost:5000/api';
@@ -11,91 +14,106 @@ export default function PrintInvoice() {
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [settings, setSettings] = useState(null);
-  const [whatsappStatus, setWhatsappStatus] = useState({ isConnected: false });
+  const [loading, setLoading] = useState(true);
   const [sendingPdf, setSendingPdf] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const invRes = await axios.get(`${API_URL}/invoices/${id}`);
-        setInvoice(invRes.data);
-        const setRes = await axios.get(`${API_URL}/settings`);
-        setSettings(setRes.data);
-        const waRes = await axios.get(`${API_URL}/whatsapp/status`);
-        setWhatsappStatus(waRes.data);
-      } catch (err) {
-        console.error('Error loading invoice:', err);
-      }
-    };
-    fetchData();
+    fetchInvoiceAndSettings();
   }, [id]);
 
-  if (!invoice || !settings) {
-    return (
-      <div className="p-12 text-center text-slate-500">
-        <div className="w-6 h-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-        <p className="text-xs font-semibold">Loading Invoice...</p>
-      </div>
-    );
-  }
-
-  const currency = settings.currency || '₹';
-  const taxLabel = settings.taxLabel || 'GST';
+  const fetchInvoiceAndSettings = async () => {
+    try {
+      const [invRes, setRes] = await Promise.all([
+        axios.get(`${API_URL}/invoices/${id}`),
+        axios.get(`${API_URL}/settings`)
+      ]);
+      setInvoice(invRes.data);
+      setSettings(setRes.data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching invoice details:', err);
+      // Fallback
+      try {
+        const inv = await axios.get(`${API_URL}/invoices/${id}`);
+        setInvoice(inv.data);
+        const set = await axios.get(`${API_URL}/settings`);
+        setSettings(set.data);
+      } catch (e) {
+        console.error('Final fallback error:', e);
+      }
+      setLoading(false);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPDF = () => {
+    if (!invoice || !settings) return;
     downloadInvoicePDF(invoice, settings);
   };
 
   const handleSendWhatsAppPDF = async () => {
-    const cust = invoice.customer || {};
-    const cleanPhone = (cust.phone || '').replace(/[^0-9]/g, '');
-    const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-
-    // If local WhatsApp Bot is linked, send real PDF document directly through bot
-    if (whatsappStatus.isConnected) {
-      setSendingPdf(true);
-      try {
-        const res = await axios.post(`${API_URL}/invoices/${invoice.id || invoice._id}/send-whatsapp-pdf`);
-        if (res.data.success) {
-          setSentSuccess(true);
-          setTimeout(() => setSentSuccess(false), 4000);
-          return;
-        }
-      } catch (err) {
-        console.warn('Bot PDF send failed, falling back to manual download:', err);
-      } finally {
-        setSendingPdf(false);
-      }
+    if (!invoice?.customer?.phone) {
+      alert('No customer phone number found on this invoice.');
+      return;
     }
 
-    // Fallback: Download PDF and open WhatsApp Web
-    downloadInvoicePDF(invoice, settings);
+    setSendingPdf(true);
+    setSentSuccess(false);
 
-    let itemListText = '';
-    invoice.items.forEach((item, idx) => {
-      const lineTotal = item.qty * item.unitPrice;
-      itemListText += `${idx + 1}. ${item.partName} (x${item.qty}) - ${currency}${lineTotal}\n`;
-    });
+    try {
+      const res = await axios.post(`${API_URL}/invoices/${id}/send-whatsapp-pdf`, {
+        phone: invoice.customer.phone
+      });
 
-    const msg = `*TAX INVOICE — ${settings.shopName.toUpperCase()}*\n\n` +
-      `Invoice No: #${invoice.invoiceNo || invoice.id.slice(-6).toUpperCase()}\n` +
-      `Date: ${new Date(invoice.createdAt).toLocaleDateString()}\n\n` +
-      `Customer: ${cust.name}\n` +
-      `Vehicle: ${cust.bikeModel} (${cust.regNo || 'Bespoke'})\n\n` +
-      `*Breakdown:*\n${itemListText}\n` +
-      `*Grand Total:* ${currency}${invoice.grandTotal}\n` +
-      (invoice.advancePaid > 0 ? `*Advance Paid:* ${currency}${invoice.advancePaid}\n*Balance Due:* ${currency}${invoice.balanceDue}\n` : '') +
-      (settings.upiId ? `*UPI ID:* ${settings.upiId}\n` : '') +
-      `\n_PDF Invoice downloaded to your computer. Please attach and send._\n` +
-      `Thank you for choosing ${settings.shopName}.`;
-
-    window.open(`https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`, '_blank');
+      if (res.data.success) {
+        setSentSuccess(true);
+        setTimeout(() => setSentSuccess(false), 5000);
+      } else {
+        alert(res.data.error || 'Could not send WhatsApp PDF.');
+      }
+    } catch (err) {
+      console.error('Error dispatching WhatsApp PDF:', err);
+      alert('Failed to send WhatsApp document. Please ensure WhatsApp is connected in Settings.');
+    } finally {
+      setSendingPdf(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] text-slate-500 font-bold text-sm">
+        Loading invoice preview...
+      </div>
+    );
+  }
+
+  if (!invoice || !settings) {
+    return (
+      <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-xs max-w-md mx-auto">
+        <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-2" />
+        <h2 className="text-base font-bold text-slate-900">Invoice Not Found</h2>
+        <p className="text-xs text-slate-500 mb-4">The invoice you requested could not be loaded.</p>
+        <button
+          onClick={() => navigate('/invoices')}
+          className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold"
+        >
+          Return to Sales & Invoices
+        </button>
+      </div>
+    );
+  }
+
+  const currency = settings.currency || '₹';
+  const taxLabel = settings.taxLabel || 'GST';
+  const billType = invoice.billType || 'Tax Invoice';
+  const isGst = billType === 'Tax Invoice';
+  const billHeaderTitle = billType === 'Pre-Invoice'
+    ? 'PRE-INVOICE'
+    : (billType === 'Estimate' ? 'ESTIMATE / QUOTATION' : 'TAX INVOICE');
 
   const cust = invoice.customer || {
     name: invoice.customerName || 'Customer',
@@ -177,7 +195,7 @@ export default function PrintInvoice() {
             <p className="text-xs font-bold text-slate-700 mt-1">
               Phone: {settings.contactNumber}
             </p>
-            {settings.gstin && (
+            {isGst && settings.gstin && (
               <p className="text-xs font-bold text-slate-800 mt-0.5">
                 {taxLabel} No: {settings.gstin}
               </p>
@@ -185,8 +203,10 @@ export default function PrintInvoice() {
           </div>
 
           <div className="text-right">
-            <div className="inline-block px-2.5 py-1 bg-slate-900 text-white rounded text-xs font-mono font-bold uppercase tracking-wider mb-1.5">
-              TAX INVOICE
+            <div className={`inline-block px-2.5 py-1 text-white rounded text-xs font-mono font-bold uppercase tracking-wider mb-1.5 ${
+              billType === 'Pre-Invoice' ? 'bg-blue-600' : (billType === 'Estimate' ? 'bg-amber-700' : 'bg-slate-900')
+            }`}>
+              {billHeaderTitle}
             </div>
             <p className="text-xs font-black text-slate-950 font-mono">
               #{invoice.invoiceNo || invoice.id.slice(-6).toUpperCase()}
@@ -234,7 +254,7 @@ export default function PrintInvoice() {
             )}
             {invoice.currentKm > 0 && (
               <p className="text-slate-600 mt-0.5 font-medium">
-                Odometer: <span className="font-mono font-bold text-slate-900">{invoice.currentKm} KM</span>
+                Kilometre: <span className="font-mono font-bold text-slate-900">{invoice.currentKm} KM</span>
               </p>
             )}
           </div>
@@ -248,14 +268,14 @@ export default function PrintInvoice() {
               <th className="py-2 px-2 text-left">Description / Work Done</th>
               <th className="py-2 px-2 text-center w-14">Qty</th>
               <th className="py-2 px-2 text-right w-24">Rate ({currency})</th>
-              <th className="py-2 px-2 text-right w-16">{taxLabel} %</th>
+              {isGst && <th className="py-2 px-2 text-right w-16">{taxLabel} %</th>}
               <th className="py-2 px-2 text-right w-28">Amount ({currency})</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {invoice.items.map((item, idx) => {
               const lineBase = item.qty * item.unitPrice;
-              const lineGst = lineBase * (item.gstRate / 100);
+              const lineGst = isGst ? lineBase * (item.gstRate / 100) : 0;
               const lineTotal = lineBase + lineGst;
 
               return (
@@ -267,7 +287,7 @@ export default function PrintInvoice() {
                   </td>
                   <td className="py-2 px-2 text-center font-mono font-medium">{item.qty}</td>
                   <td className="py-2 px-2 text-right font-mono font-medium">{item.unitPrice.toFixed(2)}</td>
-                  <td className="py-2 px-2 text-right font-mono text-slate-700">{item.gstRate}%</td>
+                  {isGst && <td className="py-2 px-2 text-right font-mono text-slate-700">{item.gstRate}%</td>}
                   <td className="py-2 px-2 text-right font-mono font-black text-slate-950">
                     {lineTotal.toFixed(2)}
                   </td>
@@ -314,14 +334,10 @@ export default function PrintInvoice() {
                 <span>Subtotal:</span>
                 <span className="font-mono font-bold text-slate-900">{currency}{invoice.subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-slate-600 font-medium">
-                <span>Total {taxLabel}:</span>
-                <span className="font-mono font-bold text-slate-900">{currency}{invoice.totalGst.toFixed(2)}</span>
-              </div>
-              {invoice.discount > 0 && (
-                <div className="flex justify-between text-emerald-800 font-bold">
-                  <span>Discount:</span>
-                  <span className="font-mono">- {currency}{invoice.discount}</span>
+              {isGst && invoice.totalGst > 0 && (
+                <div className="flex justify-between text-slate-600 font-medium">
+                  <span>Total {taxLabel}:</span>
+                  <span className="font-mono font-bold text-slate-900">{currency}{invoice.totalGst.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-xs font-black text-slate-950 pt-1.5 border-t border-slate-300">
@@ -341,17 +357,8 @@ export default function PrintInvoice() {
                 </>
               )}
             </div>
-
-            <div className="text-center mt-8 pt-1.5 border-t border-slate-300 text-[11px] font-bold text-slate-600">
-              Authorized Signatory
-            </div>
           </div>
 
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-6 pt-3 border-t border-slate-200 text-[10px] text-slate-400 font-medium">
-          <p>Thank you for choosing {settings.shopName}.</p>
         </div>
 
       </div>

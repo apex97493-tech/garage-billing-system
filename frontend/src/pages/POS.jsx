@@ -14,6 +14,9 @@ import {
   Download,
   CheckCircle2,
   UserCheck,
+  Receipt,
+  FileSpreadsheet,
+  FileCheck
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { downloadInvoicePDF } from "../utils/pdfGenerator";
@@ -24,6 +27,9 @@ const API_URL = "http://localhost:5000/api";
 export default function POS() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Bill Mode Type: 'Tax Invoice', 'Pre-Invoice', 'Estimate'
+  const [billType, setBillType] = useState('Tax Invoice');
 
   // Customer & Bike Info
   const [customer, setCustomer] = useState({
@@ -36,7 +42,6 @@ export default function POS() {
   const [currentKm, setCurrentKm] = useState("");
   const [nextServiceMonths, setNextServiceMonths] = useState(6);
   const [paymentMethod, setPaymentMethod] = useState("UPI");
-  const [discount, setDiscount] = useState(0);
   const [advancePaid, setAdvancePaid] = useState(
     Number(searchParams.get("advance")) || 0,
   );
@@ -223,20 +228,23 @@ export default function POS() {
     setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
   };
 
-  // Calculations
+  // Calculations based on Bill Mode
+  const isGstEnabled = billType === 'Tax Invoice';
   const currency = settings?.currency || "₹";
+  
   const subtotal = invoiceItems.reduce(
     (sum, item) => sum + item.qty * item.unitPrice,
     0,
   );
-  const totalGst = invoiceItems.reduce((sum, item) => {
-    const lineTotal = item.qty * item.unitPrice;
-    return sum + lineTotal * (item.gstRate / 100);
-  }, 0);
-  const grandTotal = Math.max(
-    0,
-    Math.round(subtotal + totalGst - Number(discount || 0)),
-  );
+  
+  const totalGst = isGstEnabled 
+    ? invoiceItems.reduce((sum, item) => {
+        const lineTotal = item.qty * item.unitPrice;
+        return sum + lineTotal * (item.gstRate / 100);
+      }, 0)
+    : 0;
+
+  const grandTotal = Math.max(0, Math.round(subtotal + totalGst));
   const balanceDue = Math.max(0, grandTotal - Number(advancePaid || 0));
 
   const handleSaveInvoice = async (autoDownloadPDF = false) => {
@@ -260,14 +268,18 @@ export default function POS() {
     const payload = {
       customerData: customer,
       invoiceData: {
+        billType, // 'Tax Invoice', 'Pre-Invoice', 'Estimate'
         vinNo,
         currentKm: currentKmNum,
         nextServiceKm: currentKmNum + 4000,
         nextServiceDate: nextDate.toISOString(),
-        items: invoiceItems,
+        items: invoiceItems.map(item => ({
+          ...item,
+          gstRate: isGstEnabled ? item.gstRate : 0
+        })),
         subtotal,
         totalGst,
-        discount: Number(discount || 0),
+        discount: 0,
         grandTotal,
         advancePaid: Number(advancePaid || 0),
         balanceDue,
@@ -302,14 +314,17 @@ export default function POS() {
       itemListText += `${idx + 1}. ${item.partName} (x${item.qty}) - ${currency}${total}\n`;
     });
 
+    const billHeaderTitle = billType === 'Pre-Invoice' 
+      ? 'PRE-INVOICE BILL' 
+      : (billType === 'Estimate' ? 'SERVICE ESTIMATE / QUOTATION' : 'TAX INVOICE');
+
     const msg =
-      `*TAX INVOICE / ESTIMATE*\n\n` +
+      `*${billHeaderTitle} — ${(settings?.shopName || 'WORKSHOP').toUpperCase()}*\n\n` +
       `Hello *${customer.name}*,\n` +
       `Bill breakdown for your *${customer.bikeModel}* (${customer.regNo || "Bespoke"}):\n\n` +
       `*Parts & Services:*\n${itemListText}\n` +
       `*Subtotal:* ${currency}${subtotal.toFixed(2)}\n` +
-      `*Tax:* ${currency}${totalGst.toFixed(2)}\n` +
-      (discount > 0 ? `*Discount:* ${currency}${discount}\n` : "") +
+      (isGstEnabled ? `*Tax (${settings?.taxLabel || 'GST'}):* ${currency}${totalGst.toFixed(2)}\n` : '') +
       `*Total Amount:* ${currency}${grandTotal}\n` +
       (advancePaid > 0
         ? `*Advance Paid:* ${currency}${advancePaid}\n*Balance Due:* ${currency}${balanceDue}\n`
@@ -674,10 +689,14 @@ export default function POS() {
                           <span className="text-slate-950 font-mono font-bold">
                             {currency}{part.basePrice}
                           </span>
-                          <span>•</span>
-                          <span className="font-medium">
-                            Tax {part.gstRate}%
-                          </span>
+                          {isGstEnabled && (
+                            <>
+                              <span>•</span>
+                              <span className="font-medium">
+                                Tax {part.gstRate}%
+                              </span>
+                            </>
+                          )}
                           {!isLabour && (
                             <>
                               <span>•</span>
@@ -709,17 +728,54 @@ export default function POS() {
         <div className="lg:col-span-7 space-y-4">
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between min-h-[560px]">
             <div>
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+              {/* Header & Bill Type Selector */}
+              <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 mb-3 gap-2">
                 <div className="flex items-center space-x-2">
                   <FileText className="w-4 h-4 text-slate-700" />
                   <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
                     Itemized Bill
                   </h2>
                 </div>
-                <span className="text-xs font-semibold text-slate-600 font-mono">
-                  {invoiceItems.length} items added
-                </span>
+
+                {/* 3-Way Bill Mode Selector */}
+                <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setBillType('Tax Invoice')}
+                    className={`px-3 py-1 rounded-md font-bold transition-all flex items-center ${
+                      billType === 'Tax Invoice'
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Receipt className="w-3.5 h-3.5 mr-1" />
+                    Tax Invoice
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillType('Pre-Invoice')}
+                    className={`px-3 py-1 rounded-md font-bold transition-all flex items-center ${
+                      billType === 'Pre-Invoice'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 mr-1" />
+                    Pre-Invoice (No GST)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillType('Estimate')}
+                    className={`px-3 py-1 rounded-md font-bold transition-all flex items-center ${
+                      billType === 'Estimate'
+                        ? 'bg-amber-700 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileCheck className="w-3.5 h-3.5 mr-1" />
+                    Estimate (No GST)
+                  </button>
+                </div>
               </div>
 
               {/* Items Table */}
@@ -732,7 +788,7 @@ export default function POS() {
                       <th className="py-2 px-2 text-right w-24">
                         Rate ({currency})
                       </th>
-                      <th className="py-2 px-2 text-right w-16">Tax %</th>
+                      {isGstEnabled && <th className="py-2 px-2 text-right w-16">Tax %</th>}
                       <th className="py-2 px-2 text-right w-24">Total</th>
                       <th className="py-2 px-2 text-center w-8"></th>
                     </tr>
@@ -741,7 +797,7 @@ export default function POS() {
                     {invoiceItems.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={6}
+                          colSpan={isGstEnabled ? 6 : 5}
                           className="text-center py-14 text-slate-400 font-medium italic"
                         >
                           No items added yet. Click items from the catalog on
@@ -751,7 +807,7 @@ export default function POS() {
                     ) : (
                       invoiceItems.map((item, idx) => {
                         const lineBase = item.qty * item.unitPrice;
-                        const lineGst = lineBase * (item.gstRate / 100);
+                        const lineGst = isGstEnabled ? lineBase * (item.gstRate / 100) : 0;
                         const lineTotal = lineBase + lineGst;
 
                         return (
@@ -793,9 +849,11 @@ export default function POS() {
                                 className="w-18 bg-white text-slate-900 font-bold border border-slate-300 rounded px-1.5 py-0.5 text-right font-mono text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                               />
                             </td>
-                            <td className="py-2 px-2 text-right text-slate-700 font-mono font-medium">
-                              {item.gstRate}%
-                            </td>
+                            {isGstEnabled && (
+                              <td className="py-2 px-2 text-right text-slate-700 font-mono font-medium">
+                                {item.gstRate}%
+                              </td>
+                            )}
                             <td className="py-2 px-2 text-right font-mono font-bold text-slate-950">
                               {currency}
                               {Math.round(lineTotal)}
@@ -819,8 +877,8 @@ export default function POS() {
 
             {/* Calculations & Actions */}
             <div className="pt-3 border-t border-slate-100 space-y-3">
-              {/* Calculations Box */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
+              {/* Calculations Box (Cleaned without discount) */}
+              <div className={`grid ${isGstEnabled ? 'grid-cols-3' : 'grid-cols-2'} gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs`}>
                 <div>
                   <span className="text-slate-600 font-semibold">
                     Subtotal:
@@ -830,26 +888,17 @@ export default function POS() {
                     {subtotal.toFixed(2)}
                   </p>
                 </div>
-                <div>
-                  <span className="text-slate-600 font-semibold">
-                    Total Tax:
-                  </span>
-                  <p className="text-sm font-mono font-bold text-slate-900">
-                    {currency}
-                    {totalGst.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-slate-600 font-semibold">
-                    Discount ({currency}):
-                  </span>
-                  <input
-                    type="number"
-                    value={discount}
-                    onChange={(e) => setDiscount(e.target.value)}
-                    className="w-full bg-white text-slate-900 font-mono font-bold border border-slate-300 rounded px-2 py-0.5 text-xs mt-0.5 focus:ring-2 focus:ring-slate-900 focus:outline-none"
-                  />
-                </div>
+                {isGstEnabled && (
+                  <div>
+                    <span className="text-slate-600 font-semibold">
+                      Total Tax ({settings?.taxLabel || 'GST'}):
+                    </span>
+                    <p className="text-sm font-mono font-bold text-slate-900">
+                      {currency}
+                      {totalGst.toFixed(2)}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <span className="text-slate-800 font-black uppercase">
                     Grand Total:
