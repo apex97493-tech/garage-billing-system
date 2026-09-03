@@ -31,16 +31,16 @@
     {
       "id": "cust_1788021926791_t612",
       "name": "Rohit Sharma",
-      "phone": "9876543210",
+      "phone": "8387072406",
       "bikeModel": "Royal Enfield Classic 350",
       "regNo": "RJ14-AB-9999",
       "createdAt": "2026-08-29T16:45:26.791Z",
-      "updatedAt": "2026-09-02T06:23:07.062Z",
+      "updatedAt": "2026-09-02T07:11:13.366Z",
       "vinNo": "",
-      "visitCount": 3,
-      "totalSpent": 8364,
+      "visitCount": 4,
+      "totalSpent": 27126,
       "lastKm": 5400,
-      "lastVisited": "2026-09-02T06:23:07.062Z"
+      "lastVisited": "2026-09-02T07:11:13.366Z"
     }
   ],
   "parts": [
@@ -216386,6 +216386,49 @@
     }
   ],
   "invoices": [
+    {
+      "id": "inv_1788333073433",
+      "_id": "inv_1788333073433",
+      "invoiceNo": "MOD-1010",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788021926791_t612",
+      "customerName": "Rohit Sharma",
+      "customerPhone": "8387072406",
+      "bikeModel": "Royal Enfield Classic 350",
+      "regNo": "RJ14-AB-9999",
+      "vinNo": "",
+      "currentKm": 5400,
+      "nextServiceKm": 9400,
+      "nextServiceDate": "2027-03-02T07:11:13.153Z",
+      "items": [
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 2,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_9",
+          "partName": "Subframe Chopping & Loop Fabrication (TIG Weld)",
+          "qty": 3,
+          "unitPrice": 4500,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 15900,
+      "totalGst": 2862,
+      "discount": 0,
+      "grandTotal": 18762,
+      "advancePaid": 0,
+      "balanceDue": 18762,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-02T07:11:13.433Z"
+    },
     {
       "id": "inv_1788332336340",
       "_id": "inv_1788332336340",
