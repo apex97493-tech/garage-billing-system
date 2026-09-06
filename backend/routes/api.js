@@ -275,7 +275,7 @@ router.post('/invoices', async (req, res) => {
       const bTitle = bType === 'Pre-Invoice' ? 'PRE-INVOICE' : (bType === 'Estimate' ? 'ESTIMATE / QUOTATION' : 'TAX INVOICE');
       const filePrefix = bType === 'Pre-Invoice' ? 'Pre_Invoice' : (bType === 'Estimate' ? 'Estimate' : 'Tax_Invoice');
       const fileName = `${filePrefix}_${invoiceNo}.pdf`;
-      const caption = `📄 *${bTitle} — ${(settings.shopName || 'ROYAL ENFIELD WORKSHOP').toUpperCase()}*\n` +
+      const caption = `📄 *${bTitle} — ${(settings.shopName || 'M.S. MOTORS').toUpperCase()}*\n` +
         `Bill No: #${invoiceNo} | Date: ${new Date().toLocaleDateString('en-IN')}\n` +
         `Customer: ${customerData.name}\n` +
         `Motorcycle: ${customerData.bikeModel} (Reg No: ${customerData.regNo || 'Bespoke'})\n` +

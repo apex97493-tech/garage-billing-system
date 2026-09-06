@@ -53,7 +53,7 @@ export function downloadInvoicePDF(invoice, settings) {
     format: 'a4'
   });
 
-  const shopName = (settings?.shopName || 'ROYAL ENFIELD WORKSHOP STUDIO').toUpperCase();
+  const shopName = (settings?.shopName || 'M.S. MOTORS').toUpperCase();
   const tagline = settings?.tagline || 'Motorcycle Service, Spares & Modifications';
   const address = settings?.address || 'Industrial Area, Main Auto Market';
   const phone = settings?.contactNumber || '';

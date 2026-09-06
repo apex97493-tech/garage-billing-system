@@ -75,13 +75,13 @@ export const CATALOG_TEMPLATES = {
 };
 
 const DEFAULT_SETTINGS = {
-  shopName: 'MOTO STUDIO & SERVICE CENTER',
+  shopName: 'M.S. MOTORS',
   tagline: 'Multi-Brand Motorcycle Service, Modifications & Tuning',
   workshopType: 'multi_brand_service',
-  contactNumber: '+91 98765 43210',
-  address: 'Shop No. 12, Main Auto Market, Industrial Area',
-  gstin: '',
-  upiId: 'workshop@upi',
+  contactNumber: '+91 8502883088',
+  address: 'NAND VIHAR 2, PLOT NO 74-A, PANCHAYAWALA, JHOTWARA JAIPUR (Raj.) 302034',
+  gstin: '08NIHPS3667D1ZN',
+  upiId: '8502883088-2@ybl',
   currency: '₹',
   taxLabel: 'GST',
   autoSendBillWhatsapp: true,

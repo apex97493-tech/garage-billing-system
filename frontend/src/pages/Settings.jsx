@@ -13,10 +13,10 @@ export default function Settings() {
     logo: '',
     shopName: 'ROYAL ENFIELD WORKSHOP STUDIO',
     tagline: 'Genuine Parts, Periodic Service & Maintenance',
-    contactNumber: '+91 98765 43210',
+    contactNumber: '+91 8502883088',
     address: 'Shop No. 12, Main Auto Market, Industrial Area',
     gstin: '',
-    upiId: 'workshop@upi',
+    upiId: '8502883088-2@ybl',
     currency: '₹',
     taxLabel: 'GST',
     autoSendBillWhatsapp: true,
@@ -288,7 +288,7 @@ export default function Settings() {
                   className="w-full px-3 py-2 bg-white text-slate-950 font-bold placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                   value={settings.shopName}
                   onChange={e => setSettings({ ...settings, shopName: e.target.value })}
-                  placeholder="e.g. Royal Enfield Workshop Studio"
+                  placeholder="e.g. M.S. MOTORS"
                 />
               </div>
 
@@ -312,7 +312,7 @@ export default function Settings() {
                     className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                     value={settings.contactNumber}
                     onChange={e => setSettings({ ...settings, contactNumber: e.target.value })}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 8502883088"
                   />
                 </div>
                 <div>
@@ -355,7 +355,7 @@ export default function Settings() {
                     className="w-full px-3 py-2 bg-white text-slate-900 font-medium placeholder:text-slate-400 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-slate-900 focus:outline-none"
                     value={settings.upiId}
                     onChange={e => setSettings({ ...settings, upiId: e.target.value })}
-                    placeholder="workshop@upi"
+                    placeholder="e.g. 8502883088-2@ybl"
                   />
                 </div>
               </div>

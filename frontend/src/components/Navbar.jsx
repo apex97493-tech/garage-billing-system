@@ -12,7 +12,7 @@ export default function Navbar() {
   const location = useLocation();
   const [dueCount, setDueCount] = useState(0);
   const [shopInfo, setShopInfo] = useState({
-    shopName: 'Royal Enfield Workshop Studio',
+    shopName: 'M.S. MOTORS',
     tagline: 'Service, Spares & Billing Management',
     logo: ''
   });
@@ -41,7 +41,7 @@ export default function Navbar() {
       const res = await axios.get(`${API_URL}/settings`);
       if (res.data) {
         setShopInfo({
-          shopName: res.data.shopName || 'Royal Enfield Workshop Studio',
+          shopName: res.data.shopName || 'M.S. MOTORS',
           tagline: res.data.tagline || 'Service, Spares & Billing Management',
           logo: res.data.logo || ''
         });
@@ -66,7 +66,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="bg-white border-b border-slate-200/90 sticky top-0 z-40 print:hidden shadow-xs">
+    <header className="bg-red-300 border-b border-red-400 sticky top-0 z-40 print:hidden shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           
@@ -90,11 +90,8 @@ export default function Navbar() {
                 <span className="font-black text-base tracking-tight text-slate-900">
                   {shopInfo.shopName}
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200">
-                  POS
-                </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">{shopInfo.tagline}</p>
+              <p className="text-xs text-slate-600 font-medium">{shopInfo.tagline}</p>
             </div>
           </Link>
 
@@ -108,8 +105,8 @@ export default function Navbar() {
                   to={item.path}
                   className={`flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors relative ${
                     isActive 
-                      ? 'bg-slate-900 text-white shadow-xs' 
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'bg-red-600 text-white shadow-xs' 
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-red-100'
                   }`}
                 >
                   {item.icon}

@@ -3,7 +3,7 @@ title Royal Enfield Workshop Studio POS
 color 0A
 
 echo =====================================================================
-echo          ROYAL ENFIELD WORKSHOP & MODIFICATION STUDIO
+echo          ROYAL ENFIELD WORKSHOP ^& MODIFICATION STUDIO
 echo              100%% Standalone Portable Edition
 echo =====================================================================
 echo.

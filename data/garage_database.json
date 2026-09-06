@@ -21,12 +21,12 @@
       "bikeModel": "Royal Enfield Continental GT 650",
       "regNo": "RJ14AB2134",
       "vinNo": "",
-      "visitCount": 8,
-      "totalSpent": 87633,
+      "visitCount": 11,
+      "totalSpent": 93692,
       "lastKm": 1223,
-      "lastVisited": "2026-09-02T06:58:56.268Z",
+      "lastVisited": "2026-09-06T12:22:48.432Z",
       "createdAt": "2026-09-01T10:36:24.639Z",
-      "updatedAt": "2026-09-02T06:58:56.268Z"
+      "updatedAt": "2026-09-06T12:22:48.432Z"
     },
     {
       "id": "cust_1788021926791_t612",
@@ -191,8 +191,9 @@
       "category": "Brakes",
       "basePrice": 329,
       "gstRate": 18,
-      "stock": 50,
-      "isLabour": false
+      "stock": 500,
+      "isLabour": false,
+      "updatedAt": "2026-09-06T10:40:09.231Z"
     },
     {
       "id": "p_re_7",
@@ -216387,6 +216388,142 @@
   ],
   "invoices": [
     {
+      "id": "inv_1788697368474",
+      "_id": "inv_1788697368474",
+      "invoiceNo": "MOD-1013",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2027-03-06T12:22:48.302Z",
+      "items": [
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 1,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_2",
+          "partName": "Throttle Body / Injector Ultrasonic Cleaning",
+          "qty": 1,
+          "unitPrice": 750,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 1950,
+      "totalGst": 351,
+      "discount": 0,
+      "grandTotal": 2301,
+      "advancePaid": 0,
+      "balanceDue": 2301,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T12:22:48.474Z"
+    },
+    {
+      "id": "inv_1788695754367",
+      "_id": "inv_1788695754367",
+      "invoiceNo": "MOD-1012",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2027-03-06T11:55:54.022Z",
+      "items": [
+        {
+          "partId": "srv_2",
+          "partName": "Throttle Body / Injector Ultrasonic Cleaning",
+          "qty": 1,
+          "unitPrice": 750,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_3",
+          "partName": "Brake Fluid Flush & Hydraulic Bleed",
+          "qty": 1,
+          "unitPrice": 450,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 1200,
+      "totalGst": 216,
+      "discount": 0,
+      "grandTotal": 1416,
+      "advancePaid": 0,
+      "balanceDue": 1416,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T11:55:54.367Z"
+    },
+    {
+      "id": "inv_1788690728860",
+      "_id": "inv_1788690728860",
+      "invoiceNo": "MOD-1011",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2026-09-06T10:32:07.871Z",
+      "items": [
+        {
+          "partName": "433",
+          "qty": 1,
+          "unitPrice": 35,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 1,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        },
+        {
+          "partId": "srv_2",
+          "partName": "Throttle Body / Injector Ultrasonic Cleaning",
+          "qty": 1,
+          "unitPrice": 750,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 1985,
+      "totalGst": 357.3,
+      "discount": 0,
+      "grandTotal": 2342,
+      "advancePaid": 0,
+      "balanceDue": 2342,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T10:32:08.860Z"
+    },
+    {
       "id": "inv_1788333073433",
       "_id": "inv_1788333073433",
       "invoiceNo": "MOD-1010",
@@ -216829,13 +216966,13 @@
   ],
   "jobCards": [],
   "settings": {
-    "shopName": "IRON & THROTTLE CUSTOM MOTORCYCLES",
+    "shopName": "M.S. MOTORS",
     "tagline": "Bespoke Bike Modifications, Fabrication & Performance Workshop",
     "workshopType": "multi_brand_service",
-    "contactNumber": "+91 98765 43210",
-    "address": "Plot 42, Custom Street, Industrial Area Phase 2, Near Speed Track",
-    "gstin": "07AAAAA0000A1Z5",
-    "upiId": "ironthrottle@upi",
+    "contactNumber": "+91 8502883088",
+    "address": "NAND VIHAR 2, PLOT NO 74-A, PANCHAYAWALA, JHOTWARA JAIPUR (Raj.) 302034",
+    "gstin": "08NIHPS3667D1ZN",
+    "upiId": "8502883088-2@ybl",
     "currency": "₹",
     "taxLabel": "GST",
     "autoSendBillWhatsapp": true,

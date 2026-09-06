@@ -66,7 +66,7 @@ export async function generateInvoicePdfBuffer(invoice, settings) {
         resolve(pdfBuffer);
       });
 
-      const shopName = (settings?.shopName || 'ROYAL ENFIELD WORKSHOP STUDIO').toUpperCase();
+      const shopName = (settings?.shopName || 'M.S. MOTORS').toUpperCase();
       const tagline = settings?.tagline || 'Motorcycle Service, Spares & Modifications';
       const address = settings?.address || 'Industrial Area, Main Auto Market';
       const phone = settings?.contactNumber || '';
