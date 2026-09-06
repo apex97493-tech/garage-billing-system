@@ -35,12 +35,12 @@
       "bikeModel": "Royal Enfield Classic 350",
       "regNo": "RJ14-AB-9999",
       "createdAt": "2026-08-29T16:45:26.791Z",
-      "updatedAt": "2026-09-06T14:49:21.970Z",
+      "updatedAt": "2026-09-06T17:37:30.754Z",
       "vinNo": "",
-      "visitCount": 5,
-      "totalSpent": 32790,
+      "visitCount": 6,
+      "totalSpent": 39870,
       "lastKm": 5400,
-      "lastVisited": "2026-09-06T14:49:21.970Z"
+      "lastVisited": "2026-09-06T17:37:30.754Z"
     }
   ],
   "parts": [
@@ -216388,6 +216388,41 @@
   ],
   "invoices": [
     {
+      "id": "inv_1788716250835",
+      "_id": "inv_1788716250835",
+      "invoiceNo": "MOD-1015",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788021926791_t612",
+      "customerName": "Rohit Sharma",
+      "customerPhone": "8387072406",
+      "bikeModel": "Royal Enfield Classic 350",
+      "regNo": "RJ14-AB-9999",
+      "vinNo": "",
+      "currentKm": 5400,
+      "nextServiceKm": 9400,
+      "nextServiceDate": "2027-03-06T17:37:30.574Z",
+      "items": [
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 5,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 6000,
+      "totalGst": 1080,
+      "discount": 0,
+      "grandTotal": 7080,
+      "advancePaid": 0,
+      "balanceDue": 7080,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T17:37:30.835Z"
+    },
+    {
       "id": "inv_1788706162008",
       "_id": "inv_1788706162008",
       "invoiceNo": "MOD-1014",
@@ -216997,7 +217032,7 @@
       "reminderSent": true,
       "createdAt": "2026-08-29T16:45:26.793Z",
       "billType": "Tax Invoice",
-      "reminderSentAt": "2026-09-06T17:18:05.539Z"
+      "reminderSentAt": "2026-09-06T17:37:26.569Z"
     }
   ],
   "jobCards": [],

@@ -110,33 +110,28 @@ export default function Settings() {
   };
 
   const handleDisconnectWhatsapp = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to disconnect and unlink this WhatsApp number?",
-      )
-    ) {
-      setDisconnecting(true);
-      try {
-        setWhatsappStatus({
-          isConnected: false,
-          isConnecting: true,
-          connectedPhone: null,
-          hasQR: false,
-          qrCodeDataUrl: null,
-        });
-        const res = await axios.post(`${API_URL}/whatsapp/disconnect`);
-        if (res.data?.status) {
-          setWhatsappStatus(res.data.status);
-        }
-        setTimeout(() => {
-          fetchWhatsappStatus();
-          setDisconnecting(false);
-        }, 600);
-      } catch (err) {
-        console.error("Error disconnecting WhatsApp:", err);
-        setDisconnecting(false);
-        alert("Failed to disconnect WhatsApp.");
+    setDisconnecting(true);
+    try {
+      setWhatsappStatus({
+        isConnected: false,
+        isConnecting: true,
+        connectedPhone: null,
+        hasQR: false,
+        qrCodeDataUrl: null,
+      });
+      const res = await axios.post(`${API_URL}/whatsapp/disconnect`);
+      if (res.data?.status?.qrCodeDataUrl) {
+        setWhatsappStatus(res.data.status);
       }
+      // Poll rapidly to display the fresh QR code immediately
+      setTimeout(fetchWhatsappStatus, 400);
+      setTimeout(fetchWhatsappStatus, 1200);
+      setTimeout(fetchWhatsappStatus, 2500);
+    } catch (err) {
+      console.error("Error disconnecting WhatsApp:", err);
+      fetchWhatsappStatus();
+    } finally {
+      setTimeout(() => setDisconnecting(false), 500);
     }
   };
 
@@ -598,12 +593,12 @@ export default function Settings() {
                   type="button"
                   disabled={disconnecting}
                   onClick={handleDisconnectWhatsapp}
-                  className="w-full py-2 px-3 bg-white text-red-700 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-bold transition-colors flex items-center justify-center shadow-2xs disabled:opacity-50"
+                  className="w-full py-2 px-3 bg-white text-red-700 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-bold transition-colors flex items-center justify-center shadow-2xs disabled:opacity-50 cursor-pointer"
                 >
                   <Unlink className="w-3.5 h-3.5 mr-1.5" />
                   {disconnecting
-                    ? "Disconnecting Number..."
-                    : "Disconnect Number"}
+                    ? "Disconnecting & Resetting..."
+                    : "Disconnect / Switch Number"}
                 </button>
               </div>
             ) : (

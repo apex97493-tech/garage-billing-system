@@ -133,39 +133,45 @@ class WhatsAppLocalBot {
     console.log('[WhatsApp] Initiating instant disconnect & credential purge...');
     this.isExplicitlyLoggedOut = true;
     this.isConnected = false;
-    this.isConnecting = false;
+    this.isConnecting = true;
     this.connectedPhone = null;
     this.qrCodeDataUrl = null;
     this.qrRaw = null;
     this.retryCount = 999; // Halt any auto-reconnect loops
 
     if (this.sock) {
-      try {
-        await this.sock.logout().catch(() => {});
-      } catch (e) {}
+      const activeSock = this.sock;
+      this.sock = null;
 
       try {
-        this.sock.ev.removeAllListeners('connection.update');
-        this.sock.ev.removeAllListeners('creds.update');
-        this.sock.end(undefined);
-      } catch (e) {
-        console.warn('[WhatsApp] Socket end notice:', e.message);
-      }
-      this.sock = null;
+        activeSock.ev.removeAllListeners('connection.update');
+        activeSock.ev.removeAllListeners('creds.update');
+      } catch (_) {}
+
+      // Non-blocking logout with 400ms max timeout
+      try {
+        await Promise.race([
+          activeSock.logout().catch(() => {}),
+          new Promise(r => setTimeout(r, 400))
+        ]);
+      } catch (_) {}
+
+      try {
+        activeSock.end(undefined);
+      } catch (_) {}
     }
 
-    // Wait 100ms for OS file handles to release, then wipe all session credentials
-    await new Promise(r => setTimeout(r, 100));
+    // Force wipe all session credentials from disk
     wipeSessionFiles();
 
     console.log('[WhatsApp] Disconnected and session purged successfully. Initializing fresh QR pairing...');
     
     // Automatically re-initialize to generate a fresh QR code immediately
     this.retryCount = 0;
-    this.init().catch(() => {});
+    this.init().catch(err => console.error('[WhatsApp] Init error after disconnect:', err.message));
 
-    // Allow 800ms for QR generation
-    await new Promise(r => setTimeout(r, 800));
+    // Wait up to 600ms for QR generation
+    await new Promise(r => setTimeout(r, 600));
 
     return this.getStatus();
   }
