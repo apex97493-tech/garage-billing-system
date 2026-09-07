@@ -12,6 +12,26 @@ if (!fs.existsSync(SESSION_DIR)) {
   fs.mkdirSync(SESSION_DIR, { recursive: true });
 }
 
+function wipeSessionFiles() {
+  try {
+    if (fs.existsSync(SESSION_DIR)) {
+      const files = fs.readdirSync(SESSION_DIR);
+      for (const file of files) {
+        try {
+          const p = path.join(SESSION_DIR, file);
+          if (fs.statSync(p).isDirectory()) {
+            fs.rmSync(p, { recursive: true, force: true });
+          } else {
+            fs.unlinkSync(p);
+          }
+        } catch (_) {}
+      }
+    }
+  } catch (e) {
+    console.error('[WhatsApp] Error wiping session files:', e.message);
+  }
+}
+
 class WhatsAppLocalBot {
   constructor() {
     this.sock = null;
@@ -21,6 +41,7 @@ class WhatsAppLocalBot {
     this.isConnecting = false;
     this.connectedPhone = null;
     this.retryCount = 0;
+    this.isExplicitlyLoggedOut = false;
   }
 
   async init() {
@@ -28,7 +49,7 @@ class WhatsAppLocalBot {
       const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = await import('@whiskeysockets/baileys');
       const { default: pino } = await import('pino');
 
-      // If already connected or initializing with a socket
+      // If already connected or initializing with a socket, clean it up first
       if (this.sock) {
         try {
           this.sock.ev.removeAllListeners('connection.update');
@@ -39,7 +60,7 @@ class WhatsAppLocalBot {
       }
 
       this.isConnecting = true;
-      this.retryCount = 0;
+      this.isExplicitlyLoggedOut = false;
       const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
 
       this.sock = makeWASocket({
@@ -59,7 +80,7 @@ class WhatsAppLocalBot {
           this.qrCodeDataUrl = await QRCode.toDataURL(qr);
           this.isConnected = false;
           this.isConnecting = false;
-          console.log('[WhatsApp] New pairing QR generated. Scan from Settings.');
+          console.log('[WhatsApp] New pairing QR generated. Ready to scan from Settings.');
         }
 
         if (connection === 'open') {
@@ -73,7 +94,8 @@ class WhatsAppLocalBot {
           console.log(`[WhatsApp] Workshop WhatsApp connected successfully! Number: ${this.connectedPhone}`);
         } else if (connection === 'close') {
           const statusCode = lastDisconnect?.error?.output?.statusCode;
-          const shouldReconnect = statusCode !== DisconnectReason.loggedOut && this.retryCount < 5;
+          const isLoggedOut = statusCode === DisconnectReason.loggedOut || this.isExplicitlyLoggedOut;
+          const shouldReconnect = !isLoggedOut && this.retryCount < 5;
 
           console.log(`[WhatsApp] Connection closed. Reason code: ${statusCode}. Reconnecting: ${shouldReconnect}`);
 
@@ -84,6 +106,9 @@ class WhatsAppLocalBot {
             this.isConnected = false;
             this.isConnecting = false;
             this.connectedPhone = null;
+            if (isLoggedOut) {
+              wipeSessionFiles();
+            }
           }
         }
       });
@@ -105,44 +130,50 @@ class WhatsAppLocalBot {
   }
 
   async disconnect() {
-    console.log('[WhatsApp] Initiating instant disconnect & session reset...');
+    console.log('[WhatsApp] Initiating instant disconnect & credential purge...');
+    this.isExplicitlyLoggedOut = true;
     this.isConnected = false;
-    this.isConnecting = false;
+    this.isConnecting = true;
     this.connectedPhone = null;
     this.qrCodeDataUrl = null;
     this.qrRaw = null;
-    this.retryCount = 999; // Prevent reconnection loops
+    this.retryCount = 999; // Halt any auto-reconnect loops
 
     if (this.sock) {
-      try {
-        this.sock.ev.removeAllListeners('connection.update');
-        this.sock.ev.removeAllListeners('creds.update');
-        this.sock.end(undefined);
-      } catch (e) {
-        console.warn('[WhatsApp] Socket end notice:', e.message);
-      }
+      const activeSock = this.sock;
       this.sock = null;
-    }
 
-    // Delete session files
-    try {
-      if (fs.existsSync(SESSION_DIR)) {
-        fs.rmSync(SESSION_DIR, { recursive: true, force: true });
-      }
-      fs.mkdirSync(SESSION_DIR, { recursive: true });
-    } catch (err) {
       try {
-        const files = fs.readdirSync(SESSION_DIR);
-        for (const f of files) {
-          try {
-            fs.unlinkSync(path.join(SESSION_DIR, f));
-          } catch (_) {}
-        }
+        activeSock.ev.removeAllListeners('connection.update');
+        activeSock.ev.removeAllListeners('creds.update');
+      } catch (_) {}
+
+      // Non-blocking logout with 400ms max timeout
+      try {
+        await Promise.race([
+          activeSock.logout().catch(() => {}),
+          new Promise(r => setTimeout(r, 400))
+        ]);
+      } catch (_) {}
+
+      try {
+        activeSock.end(undefined);
       } catch (_) {}
     }
 
-    console.log('[WhatsApp] Disconnected and session wiped successfully.');
-    return true;
+    // Force wipe all session credentials from disk
+    wipeSessionFiles();
+
+    console.log('[WhatsApp] Disconnected and session purged successfully. Initializing fresh QR pairing...');
+    
+    // Automatically re-initialize to generate a fresh QR code immediately
+    this.retryCount = 0;
+    this.init().catch(err => console.error('[WhatsApp] Init error after disconnect:', err.message));
+
+    // Wait up to 600ms for QR generation
+    await new Promise(r => setTimeout(r, 600));
+
+    return this.getStatus();
   }
 
   async sendMessage(phone, text) {

@@ -35,12 +35,12 @@
       "bikeModel": "Royal Enfield Classic 350",
       "regNo": "RJ14-AB-9999",
       "createdAt": "2026-08-29T16:45:26.791Z",
-      "updatedAt": "2026-09-02T07:11:13.366Z",
+      "updatedAt": "2026-09-06T17:37:30.754Z",
       "vinNo": "",
-      "visitCount": 4,
-      "totalSpent": 27126,
+      "visitCount": 6,
+      "totalSpent": 39870,
       "lastKm": 5400,
-      "lastVisited": "2026-09-02T07:11:13.366Z"
+      "lastVisited": "2026-09-06T17:37:30.754Z"
     }
   ],
   "parts": [
@@ -216437,6 +216437,76 @@
       "notes": "",
       "reminderSent": false,
       "createdAt": "2026-09-06T12:39:55.558Z"
+},
+    {
+      "id": "inv_1788716250835",
+      "_id": "inv_1788716250835",
+      "invoiceNo": "MOD-1015",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788021926791_t612",
+      "customerName": "Rohit Sharma",
+      "customerPhone": "8387072406",
+      "bikeModel": "Royal Enfield Classic 350",
+      "regNo": "RJ14-AB-9999",
+      "vinNo": "",
+      "currentKm": 5400,
+      "nextServiceKm": 9400,
+      "nextServiceDate": "2027-03-06T17:37:30.574Z",
+      "items": [
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 5,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 6000,
+      "totalGst": 1080,
+      "discount": 0,
+      "grandTotal": 7080,
+      "advancePaid": 0,
+      "balanceDue": 7080,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T17:37:30.835Z"
+    },
+    {
+      "id": "inv_1788706162008",
+      "_id": "inv_1788706162008",
+      "invoiceNo": "MOD-1014",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788021926791_t612",
+      "customerName": "Rohit Sharma",
+      "customerPhone": "8387072406",
+      "bikeModel": "Royal Enfield Classic 350",
+      "regNo": "RJ14-AB-9999",
+      "vinNo": "",
+      "currentKm": 5400,
+      "nextServiceKm": 9400,
+      "nextServiceDate": "2027-03-06T14:49:20.059Z",
+      "items": [
+        {
+          "partId": "srv_1",
+          "partName": "Comprehensive Periodic General Service Labor",
+          "qty": 4,
+          "unitPrice": 1200,
+          "gstRate": 18,
+          "isLabour": true
+        }
+      ],
+      "subtotal": 4800,
+      "totalGst": 864,
+      "discount": 0,
+      "grandTotal": 5664,
+      "advancePaid": 0,
+      "balanceDue": 5664,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T14:49:22.008Z"
     },
     {
       "id": "inv_1788697368474",
@@ -217010,9 +217080,10 @@
       "balanceDue": 0,
       "paymentMethod": "UPI",
       "notes": "",
-      "reminderSent": false,
+      "reminderSent": true,
       "createdAt": "2026-08-29T16:45:26.793Z",
-      "billType": "Tax Invoice"
+      "billType": "Tax Invoice",
+      "reminderSentAt": "2026-09-06T17:37:26.569Z"
     }
   ],
   "jobCards": [],

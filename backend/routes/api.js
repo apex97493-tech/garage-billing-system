@@ -37,12 +37,8 @@ router.post('/whatsapp/connect', async (req, res) => {
 
 router.post('/whatsapp/disconnect', async (req, res) => {
   try {
-    await whatsappBot.disconnect();
-    // Automatically re-initialize so a fresh QR is ready immediately
-    setTimeout(() => {
-      whatsappBot.init().catch(() => {});
-    }, 400);
-    res.json({ success: true, status: whatsappBot.getStatus(), message: 'WhatsApp session disconnected' });
+    const status = await whatsappBot.disconnect();
+    res.json({ success: true, status, message: 'WhatsApp session disconnected and unlinked successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
