@@ -21,12 +21,12 @@
       "bikeModel": "Royal Enfield Continental GT 650",
       "regNo": "RJ14AB2134",
       "vinNo": "",
-      "visitCount": 11,
-      "totalSpent": 93692,
+      "visitCount": 12,
+      "totalSpent": 102577,
       "lastKm": 1223,
-      "lastVisited": "2026-09-06T12:22:48.432Z",
+      "lastVisited": "2026-09-06T12:39:55.455Z",
       "createdAt": "2026-09-01T10:36:24.639Z",
-      "updatedAt": "2026-09-06T12:22:48.432Z"
+      "updatedAt": "2026-09-06T12:39:55.455Z"
     },
     {
       "id": "cust_1788021926791_t612",
@@ -602,7 +602,7 @@
       "category": "Engine",
       "basePrice": 7151,
       "gstRate": 18,
-      "stock": 50,
+      "stock": 49,
       "isLabour": false
     },
     {
@@ -612,7 +612,7 @@
       "category": "Controls",
       "basePrice": 150,
       "gstRate": 18,
-      "stock": 50,
+      "stock": 49,
       "isLabour": false
     },
     {
@@ -622,7 +622,7 @@
       "category": "Maintenance",
       "basePrice": 229,
       "gstRate": 18,
-      "stock": 50,
+      "stock": 49,
       "isLabour": false
     },
     {
@@ -216387,6 +216387,57 @@
     }
   ],
   "invoices": [
+    {
+      "id": "inv_1788698395559",
+      "_id": "inv_1788698395559",
+      "invoiceNo": "MOD-1014",
+      "billType": "Tax Invoice",
+      "customerId": "cust_1788258984639_2oqi",
+      "customerName": "dhananjay rajput",
+      "customerPhone": "7014590358",
+      "bikeModel": "Royal Enfield Continental GT 650",
+      "regNo": "RJ14AB2134",
+      "vinNo": "",
+      "currentKm": 1223,
+      "nextServiceKm": 5223,
+      "nextServiceDate": "2027-03-06T12:39:55.188Z",
+      "items": [
+        {
+          "partId": "p_re_48",
+          "partName": "SPEEDOCABLE COMPLETE (590273/A)",
+          "qty": 1,
+          "unitPrice": 150,
+          "gstRate": 18,
+          "isLabour": false
+        },
+        {
+          "partId": "p_re_47",
+          "partName": "CYLINDER BARREL WITH PISTON, CIRCLIP, PISTON PIN & RINGS (KLJ00018/A)",
+          "qty": 1,
+          "unitPrice": 7151,
+          "gstRate": 18,
+          "isLabour": false
+        },
+        {
+          "partId": "p_re_49",
+          "partName": "RUBBER SEALED BEARING (DOUBLE SIDED) (145553/B)",
+          "qty": 1,
+          "unitPrice": 229,
+          "gstRate": 18,
+          "isLabour": false
+        }
+      ],
+      "subtotal": 7530,
+      "totalGst": 1355.4,
+      "discount": 0,
+      "grandTotal": 8885,
+      "advancePaid": 0,
+      "balanceDue": 8885,
+      "paymentMethod": "UPI",
+      "notes": "",
+      "reminderSent": false,
+      "createdAt": "2026-09-06T12:39:55.558Z"
+    },
     {
       "id": "inv_1788697368474",
       "_id": "inv_1788697368474",
