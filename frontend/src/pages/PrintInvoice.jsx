@@ -149,7 +149,7 @@ export default function PrintInvoice() {
   const isGst = billType === 'Tax Invoice';
   const billHeaderTitle = billType === 'Pre-Invoice' 
     ? 'PRE-INVOICE' 
-    : (billType === 'Estimate' ? 'ESTIMATE / QUOTATION' : 'TAX INVOICE');
+    : (billType === 'Estimate' ? '' : 'TAX INVOICE');
 
   const totalQty = (invoice.items || []).reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
   const receivedAmt = invoice.advancePaid > 0 ? invoice.advancePaid : (invoice.balanceDue === 0 ? invoice.grandTotal : 0);

@@ -68,7 +68,7 @@ export function downloadInvoicePDF(invoice, settings) {
   const isGst = billType === 'Tax Invoice';
   const billHeaderTitle = billType === 'Pre-Invoice'
     ? 'PRE-INVOICE'
-    : (billType === 'Estimate' ? 'ESTIMATE / QUOTATION' : 'TAX INVOICE');
+    : (billType === 'Estimate' ? '' : 'TAX INVOICE');
 
   const cust = invoice.customer || {
     name: invoice.customerName || 'Valued Client',
@@ -377,5 +377,5 @@ export function downloadInvoicePDF(invoice, settings) {
   doc.text('Authorized Signatory / Workshop Manager', splitX + 10, curFinalY + bottomH - 2, { align: 'center', maxWidth: pageWidth - splitX });
 
   // Save PDF
-  doc.save(`${billHeaderTitle.replace(/\s+/g, '_')}_${invoiceNo}.pdf`);
+  doc.save(`${billHeaderTitle ? billHeaderTitle.replace(/\s+/g, '_') : 'Estimate'}_${invoiceNo}.pdf`);
 }

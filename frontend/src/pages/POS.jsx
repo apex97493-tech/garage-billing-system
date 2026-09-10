@@ -28,24 +28,34 @@ export default function POS() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  const loadDraft = () => {
+    try {
+      if (searchParams.get("phone") || searchParams.get("customerName")) return null;
+      const saved = localStorage.getItem('pos_draft');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return null;
+  };
+  const draft = loadDraft();
+
   // Bill Mode Type: 'Tax Invoice', 'Pre-Invoice', 'Estimate'
-  const [billType, setBillType] = useState('Tax Invoice');
+  const [billType, setBillType] = useState(draft?.billType || 'Tax Invoice');
 
   // Customer & Bike Info
-  const [customer, setCustomer] = useState({
+  const [customer, setCustomer] = useState(draft?.customer || {
     phone: searchParams.get("phone") || "",
     name: searchParams.get("customerName") || "",
     bikeModel: searchParams.get("bikeModel") || "Royal Enfield Classic 350",
     regNo: searchParams.get("regNo") || "",
   });
-  const [vinNo, setVinNo] = useState("");
-  const [currentKm, setCurrentKm] = useState("");
-  const [nextServiceMonths, setNextServiceMonths] = useState(6);
-  const [paymentMethod, setPaymentMethod] = useState("UPI");
+  const [vinNo, setVinNo] = useState(draft?.vinNo || "");
+  const [currentKm, setCurrentKm] = useState(draft?.currentKm || "");
+  const [nextServiceMonths, setNextServiceMonths] = useState(draft?.nextServiceMonths || 6);
+  const [paymentMethod, setPaymentMethod] = useState(draft?.paymentMethod || "UPI");
   const [advancePaid, setAdvancePaid] = useState(
-    Number(searchParams.get("advance")) || 0,
+    draft?.advancePaid !== undefined ? draft.advancePaid : (Number(searchParams.get("advance")) || 0)
   );
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(draft?.notes || "");
 
   // Customer Auto-Recall & History States
   const [suggestedCustomers, setSuggestedCustomers] = useState([]);
@@ -57,7 +67,14 @@ export default function POS() {
 
   // Inventory & Invoice Items
   const [partsList, setPartsList] = useState([]);
-  const [invoiceItems, setInvoiceItems] = useState([]);
+  const [invoiceItems, setInvoiceItems] = useState(draft?.invoiceItems || []);
+
+  useEffect(() => {
+    if (!searchParams.get("phone") && !searchParams.get("customerName")) {
+      const draftData = { billType, customer, vinNo, currentKm, nextServiceMonths, paymentMethod, advancePaid, notes, invoiceItems };
+      localStorage.setItem('pos_draft', JSON.stringify(draftData));
+    }
+  }, [billType, customer, vinNo, currentKm, nextServiceMonths, paymentMethod, advancePaid, notes, invoiceItems]);
   const [searchPart, setSearchPart] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
@@ -294,6 +311,8 @@ export default function POS() {
       if (autoDownloadPDF && settings) {
         downloadInvoicePDF(res.data, settings);
       }
+
+      localStorage.removeItem('pos_draft');
 
       navigate(`/print/${res.data.id || res.data._id}`);
     } catch (err) {
@@ -952,14 +971,7 @@ export default function POS() {
 
               {/* Actions */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
-                <button
-                  type="button"
-                  onClick={handleSendWhatsAppBill}
-                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center shadow-xs transition-colors"
-                >
-                  <MessageSquare className="w-4 h-4 mr-1.5" />
-                  WhatsApp Bill
-                </button>
+                <div></div>
 
                 <div className="flex items-center space-x-2">
                   <button
